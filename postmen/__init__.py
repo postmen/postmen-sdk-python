@@ -185,10 +185,7 @@ class API(object):
         self._error = None
         params = self._get_requests_params(method, path, body, query)
         self._apply_rate_limit()
-        try:
-            response = requests.request(**params)
-        except Exception, e:
-            raise PostmenError(message=str(e))
+        response = requests.request(**params)
         return self._response(response, raw)
     
     def _call(self, method, path, body=None, query={}, retry=None, raw=False, safe=False):
@@ -202,17 +199,26 @@ class API(object):
             try:
                 return self._call_ones(method, path, body, query, raw)
             except PostmenError, e:
-                if not e.retryable():
+                if not e.retryable() and not safe:
                     raise
+
+                if not e.retryable() and safe:
+                    self._error = e
+                    return None
 
                 count = count + 1
                 if count >= tries:
-                    raise
+                    if safe:
+                        self._error = e
+                        return None
+                    else:
+                        raise
+
                 delay = 1.0 if delay == 0 else delay*2
                 time.sleep(delay)
             except Exception, e:
                 type, value, traceback = sys.exc_info()
-                raise PostmenError, ("unexpected error", type, value), traceback
+                raise PostmenError(message=str(e)), None, traceback
 
     def getError():
         return self._error
