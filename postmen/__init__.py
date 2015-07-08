@@ -10,32 +10,28 @@ import requests
 import six
 import six.moves.urllib.parse as urllib_parse
 
-__author__ = 'Postmen <support@postmen.com>'
+__author__ = 'AfterShip <support@aftership.com>'
 
 # sdk_ver = pkg_resources.require("postmen")[0].version
 sdk_ver = '0.1'
-
-# Values for test described in APIv3 class definition below.
-# To run test cases go to the directory with current file and run:
-# $ python __init__.py
 
 
 class PostmenError(Exception):
     def __init__(self, **kwarg):
         self.meta = kwarg
-        self._set_default('code', None)
-        self._set_default('details', [])
-        self._set_default('retryable', False)
-        self._set_default('message', 'no details')
+        self._setDefault('code', None)
+        self._setDefault('details', [])
+        self._setDefault('retryable', False)
+        self._setDefault('message', 'no details')
         print('PostmenError constructor: '+json.dumps(self.meta, indent=4))
 
     def __getitem__(self, attribute):
         return self.meta[attribute]
 
     def __str__(self):
-        return self.message()+' '+( ("(%d)" % self.code()) if self.code() else "" )
+        return self.message()+' '+( ("("+self.code()+")") if self.code() else "" )
 
-    def _set_default(self, key, default_value):
+    def _setDefault(self, key, default_value):
         if key not in self.meta:
             self.meta[key] = default_value
 
@@ -53,19 +49,33 @@ class PostmenError(Exception):
 
 
 class JSONWithDatetimeEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, datetime.datetime):
-            encoded_object = obj.isoformat()
-        else:
-            encoded_object = json.JSONEncoder.default(self, obj)
-
-        return encoded_object
+    def default(self, o):
+        o = o.isoformat() if isinstance(o, datetime.datetime) else json.JSONEncoder.default(self, o)
+        return o
 
 
 class JSONWithDatetimeDecoder(json.JSONDecoder):
     def decode(self, s):
-        print 'JSONWithDatetimeDecoder: decode', s
-        return json.JSONDecoder.decode(self, s)
+        o = json.JSONDecoder.decode(self, s)
+        return self.handleObj(o)
+
+    def handleObj(self, o):
+        if isinstance(o, dict):
+            for key in list(o.keys()):
+                val = o[key]
+                o[key] = self.handleObj(val)
+            return o
+        if isinstance(o, list):
+            collection = []
+            for val in o:
+                collection.append(self.handleObj(val))
+            return collection
+        if isinstance(o, six.string_types):
+            try:
+                return dateutil.parser.parse(o)
+            except:
+                pass
+        return o
 
 
 class API(object):
@@ -104,14 +114,14 @@ class API(object):
         if region and not endpoint:
             endpoint = 'https://%s-api.postmen.com' % region
         max_calls_per_sec = 1  # Pass as a named argument?
-        self._endpoint = endpoint
-        self._version = version
         self._error = None
+        self._retry = retry
+        self._version = version
+        self._endpoint = endpoint
         self._last_call = None
         self._rate_limit = 1.0 / float(max_calls_per_sec)
         self._datetime_convert = datetime_convert
         self._proxies = {'https': proxy} if proxy else None
-        self._retry = retry
         self._headers = {
             'content-type': 'application/json',
             'postmen-api-key': api_key,
@@ -175,7 +185,10 @@ class API(object):
         self._error = None
         params = self._get_requests_params(method, path, body, query)
         self._apply_rate_limit()
-        response = requests.request(**params)
+        try:
+            response = requests.request(**params)
+        except Exception, e:
+            raise PostmenError(message=str(e))
         return self._response(response, raw)
     
     def _call(self, method, path, body=None, query={}, retry=None, raw=False, safe=False):
@@ -233,12 +246,13 @@ if __name__ == "__main__":
     # doctest.testmod(extraglobs={'slug': TEST_SLUG,
     #                             'number': TEST_TRACKING_NUMBER,
     #                             'api': APIv4(TEST_API_KEY)})
-    api_key = '8fc7966b-679b-4a57-911d-c5a663229c9e__'
+
+    api_key = 'API_KEY'
     region = 'sandbox'
     payload = {
         "async": False,
         "shipper_accounts": [{
-            "id": "b366c343-b754-4981-bee8-e233f79fd53a"
+            "id": "SHIPPER_ACCOUNTS.ID"
         }],
         "is_document": False,
         "shipment": {
@@ -294,13 +308,9 @@ if __name__ == "__main__":
         }
     }
 
-    postmen = API(api_key, region)
+
+    postmen = API(api_key, region, datetime_convert=True)
     result = postmen.create('rates', payload)
-    print( json.dumps(result, indent=4) )
+    print( json.dumps(result, indent=4, cls=JSONWithDatetimeEncoder) )
 
     print("done!")
-
-
-
-
-
