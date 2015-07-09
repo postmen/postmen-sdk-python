@@ -136,7 +136,8 @@ class API(object):
                 meta_code = ret.get('meta', {}).get('code', None)
                 if not meta_code:
                     raise PostmenError(message='API response missed meta info')
-                if meta_code != 200:
+                # if meta_code != 200:
+                if int(meta_code / 1000) == 4:
                     raise PostmenError(**ret['meta'])
                 if 'data' not in ret:
                     raise PostmenError(message='no data returned by API server')
@@ -157,14 +158,15 @@ class API(object):
 
     def _get_requests_params(self, method, path, body, query, proxy):
         headers = self._headers
+
         url = six.moves.urllib.parse.urljoin(
             self._endpoint,
             '%s/%s' % (self._version, path),
             allow_fragments=False
         )
-        if not isinstance(body, six.string_types):
+        if body and not isinstance(body, six.string_types):
             body = json.dumps(body, cls=JSONWithDatetimeEncoder)
-        if query:
+        if isinstance(query, dict):
             for key in list(query.keys()):
                 value = query[key]
                 if isinstance(value, datetime.datetime):
@@ -183,6 +185,8 @@ class API(object):
         self._error = None
         params = self._get_requests_params(method, path, body, query, proxy)
         self._apply_rate_limit()
+        t = str(datetime.datetime.now())
+        print(t)
         response = requests.request(**params)
         return self._response(response, raw, time)
 
@@ -190,7 +194,7 @@ class API(object):
               method,
               path,
               body=None,
-              query={},
+              query=None,
 
               raw=None,
               safe=None,
@@ -232,19 +236,19 @@ class API(object):
         return self._error
 
     def GET(self, path, **kwargs):
-        return self._call('get', path, **kwargs)
+        return self._call('GET', path, **kwargs)
 
     def POST(self, path, body, **kwargs):
-        return self._call('post', path, body, **kwargs)
+        return self._call('POST', path, body, **kwargs)
 
     def PUT(self, path, body, **kwargs):
-        return self._call('put', path, body, **kwargs)
+        return self._call('PUT', path, body, **kwargs)
 
     def DELETE(self, path, **kwargs):
-        return self._call('delete', path, **kwargs)
+        return self._call('DELETE', path, **kwargs)
 
     def get(self, resource, id_=None, **kwargs):
-        method = '%s/%s' % (method, str(id_)) if id_ else resource
+        method = '%s/%s' % (resource, str(id_)) if id_ else resource
         return self.GET(method, **kwargs)
 
     def create(self, resource, payload, **kwargs):
@@ -319,10 +323,85 @@ if __name__ == "__main__":
             }]
         }
     }
+    payload_str = '''{
+    "shipper_accounts": [{
+        "id": "b366c343-b754-4981-bee8-e233f79fd53a"
+    }],
+    "is_document": false,
+    "shipment": {
+        "ship_from": {
+            "contact_name": "Jameson McLaughlin",
+            "company_name": "Bode, Lind and Powlowski",
+            "street1": "8918 Borer Ramp",
+            "city": "Los Angeles",
+            "state": "CA",
+            "postal_code": "90001",
+            "country": "USA",
+            "type": "business"
+        },
+        "ship_to": {
+            "contact_name": "Dr. Moises Corwin",
+            "phone": "1-140-225-6410",
+            "email": "Giovanna42@yahoo.com",
+            "street1": "28292 Daugherty Orchard",
+            "city": "Beverly Hills",
+            "postal_code": "90209",
+            "state": "CA",
+            "country": "USA",
+            "type": "residential"
+        },
+        "parcels": [{
+            "description": "iMac (Retina 5K, 27-inch, Late 2014)",
+            "box_type": "custom",
+            "weight": {
+                "value": 9.54,
+                "unit": "kg"
+            },
+            "dimension": {
+                "width": 65,
+                "height": 52,
+                "depth": 21,
+                "unit": "cm"
+            },
+            "items": [{
+                "description": "iMac (Retina 5K, 27-inch, Late 2014)",
+                "origin_country": "USA",
+                "quantity": 1,
+                "price": {
+                    "amount": 1999,
+                    "currency": "USD"
+                },
+                "weight": {
+                    "value": 9.54,
+                    "unit": "kg"
+                },
+                "sku": "imac2014"
+            }]
+        }]
+    }
+}
+    '''
 
-    postmen = API(api_key, region, time=True, safe=True, raw=True)
-    result = postmen.create('rates', payload, time=True, safe=False, raw=False)
+    api_key = '8fc7966b-679b-4a57-911d-c5a663229c9e_'
+    payload["shipper_accounts"][0]["id"] = "b366c343-b754-4981-bee8-e233f79fd53a"
+
+    postmen = API(api_key, region, safe=True)
     
+
+    # Rate limit test
+    while True:
+        # t = str(datetime.datetime.now())
+        # print('%s calling' % t)
+        postmen.GET('whoami')
+        # t = str(datetime.datetime.now())
+        # print('%s called' % t)
+
+
+    # result = postmen.create('rates', payload_str, time=True, safe=False, raw=False)
+    # r_id = result['id']
+    # print('Rate ID: %s'%r_id)
+    # time.sleep(10)
+
     print('\nRESULT:')
     print(json.dumps(result, indent=4, cls=JSONWithDatetimeEncoder))
 
