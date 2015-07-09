@@ -1,52 +1,15 @@
+import sys
 import json
 import time
-import threading
 import datetime
-import dateutil.parser
-import sys
-import pkg_resources
+import traceback
+import threading
 
-import requests
 import six
-import six.moves.urllib.parse as urllib_parse
+import requests
+import dateutil.parser
 
 __author__ = 'AfterShip <support@aftership.com>'
-
-# sdk_ver = pkg_resources.require("postmen")[0].version
-sdk_ver = '0.1'
-
-
-class PostmenError(Exception):
-    def __init__(self, **kwarg):
-        self.meta = kwarg
-        self._setDefault('code', None)
-        self._setDefault('details', [])
-        self._setDefault('retryable', False)
-        self._setDefault('message', 'no details')
-        print('PostmenError constructor: '+json.dumps(self.meta, indent=4))
-
-    def __getitem__(self, attribute):
-        return self.meta[attribute]
-
-    def __str__(self):
-        msg = self.message()+' '+(('(%s)' % str(self.code())) if self.code() else "" )
-        return msg
-
-    def _setDefault(self, key, default_value):
-        if key not in self.meta:
-            self.meta[key] = default_value
-
-    def code(self):
-        return self['code']
-
-    def message(self):
-        return self['message']
-
-    def details(self):
-        return self['details']
-
-    def retryable(self):
-        return self['retryable']
 
 
 class JSONWithDatetimeEncoder(json.JSONEncoder):
@@ -62,15 +25,16 @@ class JSONWithDatetimeDecoder(json.JSONDecoder):
 
     def handleObj(self, o):
         if isinstance(o, dict):
-            for key in list(o.keys()):
+            keys = list(o.keys())
+            for key in keys:
                 val = o[key]
                 o[key] = self.handleObj(val)
             return o
         if isinstance(o, list):
-            collection = []
+            c = []
             for val in o:
-                collection.append(self.handleObj(val))
-            return collection
+                c.append(self.handleObj(val))
+            return c
         if isinstance(o, six.string_types):
             try:
                 return dateutil.parser.parse(o)
@@ -79,80 +43,109 @@ class JSONWithDatetimeDecoder(json.JSONDecoder):
         return o
 
 
+class PostmenError(Exception):
+    def __init__(self, **kwarg):
+        self.meta = kwarg
+        self._setDefault('code', None)
+        self._setDefault('details', [])
+        self._setDefault('retryable', False)
+        self._setDefault('message', 'no details')
+        # traceback.print_stack()
+
+    def __str__(self):
+        msg = self.message()+((' (%s)' % str(self.code())) if self.code() else "")
+        return msg
+
+    def _setDefault(self, key, default_value):
+        if key not in self.meta:
+            # print('\terror: set default for %s' % key)
+            self.meta[key] = default_value
+        # print('\terror: set default for %s' % self.meta[key])
+
+    def traceback(self):
+        return self.meta['traceback']
+
+    def code(self):
+        return self.meta['code']
+
+    def message(self):
+        return self.meta['message']
+
+    def details(self):
+        return self.meta['details']
+
+    def retryable(self):
+        return self.meta['retryable']
+
+
 class API(object):
-    """
-    Test code goes below.
+    def __init__(
+        self, 
+        api_key,
+        region=None,
 
-    Test covers all accessing methods (POST, GET, PUT, DELETE).
-    Test covers all variants of building specific API calls (endpoints paths + body):
-    - dot.separated.constants.get()                : GET /dot/separated/constants
-    - params['in']['brackets'].get()               : GET /params/in/brackets
-    - path.get('arg1', 'arg2', arg_name='arg3')    : GET /path/arg1/arg2?arg_name=arg3
-    Test checks conversion of input list type parameters to comma separated strings.
-    Test checks conversion of input timestamp strings to datetime variables.
-    Test checks conversion of output timestamp strings to datetime variables.
+        endpoint=None,
+        calls_per_sec=1,
+        version='v3',
+        x_agent='python-sdk-0.1',
 
-
-    >>> api.trackings.post(tracking=dict(slug=slug, tracking_number=number, title="Title"))['tracking']['title']
-    u'Title'
-    >>> api.trackings.get(slug, number, fields=['title', 'created_at'])['tracking']['title']
-    u'Title'
-    >>> type(api.trackings.put(slug, number, tracking=dict(title="Title (changed)"))['tracking']['updated_at'])
-    <type 'datetime.datetime'>
-    >>> api.trackings[slug][number].get()['tracking']['title']
-    u'Title (changed)'
-    >>> api.trackings.get(created_at_min=datetime.datetime(2014, 6, 1), fields=['title', 'order_id'])['fields']
-    u'title,order_id'
-    >>> api.trackings.delete(slug, number)['tracking']['slug']
-    u'russian-post'
-    """
-    def __init__(self, api_key, region=None,
-                 endpoint=None, version='v3', proxy=None, retry=True, datetime_convert=False):
+        raw=False,
+        safe=False,
+        time=False,
+        proxy=None,
+        retry=True
+    ):    
         if not api_key:
             raise PostmenError(message='missed API key')
         if not region and not endpoint:
             raise PostmenError(message='missed region')
-        if region and not endpoint:
-            endpoint = 'https://%s-api.postmen.com' % region
-        max_calls_per_sec = 1  # Pass as a named argument?
+        
         self._error = None
-        self._retry = retry
         self._version = version
-        self._endpoint = endpoint
         self._last_call = None
-        self._rate_limit = 1.0 / float(max_calls_per_sec)
-        self._datetime_convert = datetime_convert
-        self._proxies = {'https': proxy} if proxy else None
-        self._headers = {
-            'content-type': 'application/json',
-            'postmen-api-key': api_key,
-            'x-postmen-agent': 'python-sdk-%s' % sdk_ver
-        }
+        self._rate_limit = 1.0 / float(calls_per_sec)
+        self._endpoint = endpoint if endpoint else 'https://%s-api.postmen.com' % region
+        
+        self._headers = {'content-type': 'application/json'}
+        self._headers['postmen-api-key'] = api_key
+        self._headers['x-postmen-agent'] = x_agent
 
-    def _response(self, response, raw):
+        self._raw = raw
+        self._safe = safe
+        self._time = time
+        self._proxy = {'https': proxy} if proxy else {}
+        self._retry = retry
+
+    def _report_error(self, e, safe):
+        type, value, traceback = sys.exc_info()
+        kwargs = e.meta if isinstance(e, PostmenError) else {'message': str(e)}
+        kwargs['traceback'] = traceback
+        e = PostmenError(**kwargs)
+        if safe:
+            self._error = e
+            return None
+        raise e, None, traceback
+
+    def _response(self, response, raw, time):
         if response.text:
             if raw:
                 ret = response.text
             else:
-                if self._datetime_convert:
-                    kls = JSONWithDatetimeDecoder
-                else:
-                    kls = json.JSONDecoder
+                kls = JSONWithDatetimeDecoder if time else json.JSONDecoder
                 ret = json.loads(response.text, cls=kls)
-
                 meta_code = ret.get('meta', {}).get('code', None)
                 if not meta_code:
                     raise PostmenError(message='API response missed meta info')
-
                 if meta_code != 200:
                     raise PostmenError(**ret['meta'])
+                if 'data' not in ret:
+                    raise PostmenError(message='no data returned by API server')
+                ret = ret['data']
         else:
-            ret = None
+            raise PostmenError(message='no response from API server')
         if not response.ok:
             raise PostmenError(message='HTTP code = %d' % response.status_code)
-        if not ret:
-            raise PostmenError(message='no response from API server')
-        return ret['data']
+        return ret
 
     def _apply_rate_limit(self):
         with threading.Lock():
@@ -162,9 +155,13 @@ class API(object):
                     time.sleep(delta)
             self._last_call = time.clock()
 
-    def _get_requests_params(self, method, path, body, query):
+    def _get_requests_params(self, method, path, body, query, proxy):
         headers = self._headers
-        url = urllib_parse.urljoin(self._endpoint, self._version+'/'+path, allow_fragments=False)
+        url = six.moves.urllib.parse.urljoin(
+            self._endpoint,
+            '%s/%s' % (self._version, path),
+            allow_fragments=False
+        )
         if not isinstance(body, six.string_types):
             body = json.dumps(body, cls=JSONWithDatetimeEncoder)
         if query:
@@ -174,23 +171,43 @@ class API(object):
                     query[key] = value.isoformat()
 
         return {
-            "method": method,
-            "url": url,
-            "params": query,
+            "method":  method,
+            "url":     url,
+            "params":  query,
             "headers": headers,
-            "data": body,
-            "proxies": self._proxies
+            "data":    body,
+            "proxies": proxy
         }
 
-    def _call_ones(self, method, path, body, query, raw):
+    def _call_ones(self, method, path, body, query, raw, time, proxy):
         self._error = None
-        params = self._get_requests_params(method, path, body, query)
+        params = self._get_requests_params(method, path, body, query, proxy)
         self._apply_rate_limit()
         response = requests.request(**params)
-        return self._response(response, raw)
-    
-    def _call(self, method, path, body=None, query={}, retry=None, raw=False, safe=False):
+        return self._response(response, raw, time)
+
+    def _call(self,
+              method,
+              path,
+              body=None,
+              query={},
+
+              raw=None,
+              safe=None,
+              time=None,
+              proxy=None,
+              retry=None):
+        
         retry = self._retry if retry==None else retry
+        raw   = self._raw   if raw==None   else raw
+        safe  = self._safe  if safe==None  else safe
+        time  = self._time  if time==None  else time
+        if proxy == False:
+            proxy = {}
+        elif isinstance(proxy, six.string_types):
+            proxy = {'https': proxy}
+        else:
+            proxy = self._proxy
 
         tries = 5 if retry else 1
         count = 0
@@ -198,32 +215,18 @@ class API(object):
 
         while True:
             try:
-                return self._call_ones(method, path, body, query, raw)
+                return self._call_ones(method, path, body, query, raw, time, proxy)
             except PostmenError, e:
-                if not e.retryable() and not safe:
-                    raise
-
-                if not e.retryable() and safe:
-                    self._error = e
-                    return None
-
+                if not e.retryable():
+                    return self._report_error(e, safe)
                 count = count + 1
                 if count >= tries:
-                    if safe:
-                        self._error = e
-                        return None
-                    else:
-                        raise
+                    return self._report_error(e, safe)
 
                 delay = 1.0 if delay == 0 else delay*2
                 time.sleep(delay)
             except Exception, e:
-                e = PostmenError(message=str(e))
-                if safe:
-                    self._error = e
-                    return None
-                type, value, traceback = sys.exc_info()
-                raise e, None, traceback
+                return self._report_error(e, safe)
 
     def getError(self):
         return self._error
@@ -240,24 +243,20 @@ class API(object):
     def DELETE(self, path, **kwargs):
         return self._call('delete', path, **kwargs)
 
-    def get(self, resource, id=None, **kwargs):
-        method = '%s/%s'%(method, str(id)) if id else resource
+    def get(self, resource, id_=None, **kwargs):
+        method = '%s/%s' % (method, str(id_)) if id_ else resource
         return self.GET(method, **kwargs)
 
     def create(self, resource, payload, **kwargs):
         return self.POST(resource, payload, **kwargs)
 
     def cancel(self, resource, id_, **kwargs):
-        return self.POST(resource+'/'+id_+'/cancel', '{"async":false}', **kwargs)
+        return self.POST('%s/%s/cancel' % (resource, str(id_)), '{"async":false}', **kwargs)
 
 
 if __name__ == "__main__":
     import doctest
     print("Running smoke tests")
-
-    # doctest.testmod(extraglobs={'slug': TEST_SLUG,
-    #                             'number': TEST_TRACKING_NUMBER,
-    #                             'api': APIv4(TEST_API_KEY)})
 
     region = 'sandbox'
     api_key = 'API_KEY'
@@ -321,10 +320,21 @@ if __name__ == "__main__":
         }
     }
 
+    postmen = API(api_key, region, time=True, safe=True, raw=True)
+    result = postmen.create('rates', payload, time=True, safe=False, raw=False)
+    
+    print('\nRESULT:')
+    print(json.dumps(result, indent=4, cls=JSONWithDatetimeEncoder))
 
-    postmen = API(api_key, region, datetime_convert=True)
-    result = postmen.create('rates', payload)
-    print( json.dumps(result, indent=4, cls=JSONWithDatetimeEncoder) )
-    print( postmen.getError() )
+    e = postmen.getError();
+    if e:
+        print('\nERROR:')
+        print('\t%s' % str(e))
+        print('\tcode: %s' % e.code())
+        print('\tmessage: %s' % e.message())
+        print('\tdetails: %s' % e.details())
+        print('\tretryable: %s' % e.retryable())
+        print('\ttraceback: %s\n' % e.traceback())
+        traceback.print_tb(e.traceback())
 
-    print("done!")
+    print("\ndone!")
