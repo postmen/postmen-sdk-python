@@ -29,7 +29,8 @@ class PostmenError(Exception):
         return self.meta[attribute]
 
     def __str__(self):
-        return self.message()+' '+( ("("+self.code()+")") if self.code() else "" )
+        msg = self.message()+' '+(('(%s)' % str(self.code())) if self.code() else "" )
+        return msg
 
     def _setDefault(self, key, default_value):
         if key not in self.meta:
@@ -217,10 +218,14 @@ class API(object):
                 delay = 1.0 if delay == 0 else delay*2
                 time.sleep(delay)
             except Exception, e:
+                e = PostmenError(message=str(e))
+                if safe:
+                    self._error = e
+                    return None
                 type, value, traceback = sys.exc_info()
-                raise PostmenError(message=str(e)), None, traceback
+                raise e, None, traceback
 
-    def getError():
+    def getError(self):
         return self._error
 
     def GET(self, path, **kwargs):
@@ -249,16 +254,18 @@ class API(object):
 if __name__ == "__main__":
     import doctest
     print("Running smoke tests")
+
     # doctest.testmod(extraglobs={'slug': TEST_SLUG,
     #                             'number': TEST_TRACKING_NUMBER,
     #                             'api': APIv4(TEST_API_KEY)})
 
-    api_key = 'API_KEY'
     region = 'sandbox'
+    api_key = 'API_KEY'
+    shipper_id = 'SHIPPER_ACCOUNT_ID'
     payload = {
         "async": False,
         "shipper_accounts": [{
-            "id": "SHIPPER_ACCOUNTS.ID"
+            "id": shipper_id
         }],
         "is_document": False,
         "shipment": {
@@ -318,5 +325,6 @@ if __name__ == "__main__":
     postmen = API(api_key, region, datetime_convert=True)
     result = postmen.create('rates', payload)
     print( json.dumps(result, indent=4, cls=JSONWithDatetimeEncoder) )
+    print( postmen.getError() )
 
     print("done!")
