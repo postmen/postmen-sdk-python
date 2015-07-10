@@ -119,7 +119,7 @@ class API(object):
         self._retry = retry
 
     def _delay(self, sec):
-        print('delay for %f' % sec)
+        # print('delay for %f' % sec)
         time_module.sleep(sec)
 
     def _report_error(self, e, safe):
