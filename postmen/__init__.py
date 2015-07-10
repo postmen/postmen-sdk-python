@@ -1,6 +1,6 @@
 import sys
 import json
-import time
+import time as time_module
 import datetime
 import traceback
 import threading
@@ -50,7 +50,7 @@ class PostmenError(Exception):
         self._setDefault('details', [])
         self._setDefault('retryable', False)
         self._setDefault('message', 'no details')
-        # traceback.print_stack()
+        # self.meta['retryable'] = True  # dbg injection
 
     def __str__(self):
         msg = self.message()+((' (%s)' % str(self.code())) if self.code() else "")
@@ -58,9 +58,7 @@ class PostmenError(Exception):
 
     def _setDefault(self, key, default_value):
         if key not in self.meta:
-            # print('\terror: set default for %s' % key)
             self.meta[key] = default_value
-        # print('\terror: set default for %s' % self.meta[key])
 
     def traceback(self):
         return self.meta['traceback']
@@ -85,9 +83,9 @@ class API(object):
         region=None,
 
         endpoint=None,
-        calls_per_sec=1,
         version='v3',
         x_agent='python-sdk-0.1',
+        retries=4,
 
         raw=False,
         safe=False,
@@ -100,10 +98,14 @@ class API(object):
         if not region and not endpoint:
             raise PostmenError(message='missed region')
         
+        self._retries = retries
+
         self._error = None
         self._version = version
-        self._last_call = None
-        self._rate_limit = 1.0 / float(calls_per_sec)
+
+        self._calls_left = None
+        self._time_before_reset = None
+
         self._endpoint = endpoint if endpoint else 'https://%s-api.postmen.com' % region
         
         self._headers = {'content-type': 'application/json'}
@@ -116,6 +118,10 @@ class API(object):
         self._proxy = {'https': proxy} if proxy else {}
         self._retry = retry
 
+    def _delay(self, sec):
+        print('delay for %f' % sec)
+        time_module.sleep(sec)
+
     def _report_error(self, e, safe):
         type, value, traceback = sys.exc_info()
         kwargs = e.meta if isinstance(e, PostmenError) else {'message': str(e)}
@@ -127,6 +133,18 @@ class API(object):
         raise e, None, traceback
 
     def _response(self, response, raw, time):
+        sec_before_reset = response.headers.get('x-ratelimit-reset', None)
+        if sec_before_reset:
+            self._time_before_reset = time_module.clock() + float(sec_before_reset)
+        self._calls_left = response.headers.get('x-ratelimit-remaining', self._calls_left)
+        if self._calls_left:
+            self._calls_left = int(self._calls_left)
+
+        # print('time_module.clock()   %f' % time_module.clock())
+        # print('x_ratelimit_reset     %f' % self._time_before_reset)
+        # print('x_ratelimit_remaining %d' % self._calls_left)
+        # print('time_module.clock()   %f' % time_module.clock())
+
         if response.text:
             if raw:
                 ret = response.text
@@ -136,7 +154,8 @@ class API(object):
                 meta_code = ret.get('meta', {}).get('code', None)
                 if not meta_code:
                     raise PostmenError(message='API response missed meta info')
-                # if meta_code != 200:
+
+                # TODO: show Teddy, is error-identification correct?
                 if int(meta_code / 1000) == 4:
                     raise PostmenError(**ret['meta'])
                 if 'data' not in ret:
@@ -147,14 +166,6 @@ class API(object):
         if not response.ok:
             raise PostmenError(message='HTTP code = %d' % response.status_code)
         return ret
-
-    def _apply_rate_limit(self):
-        with threading.Lock():
-            if self._last_call:
-                delta = self._rate_limit - (time.clock() - self._last_call)
-                if delta > 0:
-                    time.sleep(delta)
-            self._last_call = time.clock()
 
     def _get_requests_params(self, method, path, body, query, proxy):
         headers = self._headers
@@ -181,12 +192,16 @@ class API(object):
             "proxies": proxy
         }
 
+    def _apply_rate_limit(self):
+        if self._calls_left and self._calls_left <= 0:
+            delta = self._time_before_reset - time_module.clock()
+            if delta > 0:
+                self._delay(delta)
+
     def _call_ones(self, method, path, body, query, raw, time, proxy):
         self._error = None
         params = self._get_requests_params(method, path, body, query, proxy)
         self._apply_rate_limit()
-        t = str(datetime.datetime.now())
-        print(t)
         response = requests.request(**params)
         return self._response(response, raw, time)
 
@@ -213,7 +228,7 @@ class API(object):
         else:
             proxy = self._proxy
 
-        tries = 5 if retry else 1
+        tries = self._retries if retry else 1
         count = 0
         delay = 0
 
@@ -228,7 +243,7 @@ class API(object):
                     return self._report_error(e, safe)
 
                 delay = 1.0 if delay == 0 else delay*2
-                time.sleep(delay)
+                self._delay(delay)
             except Exception, e:
                 return self._report_error(e, safe)
 
@@ -382,25 +397,25 @@ if __name__ == "__main__":
 }
     '''
 
-    api_key = '8fc7966b-679b-4a57-911d-c5a663229c9e_'
-    payload["shipper_accounts"][0]["id"] = "b366c343-b754-4981-bee8-e233f79fd53a"
-
-    postmen = API(api_key, region, safe=True)
     
 
+    postmen = API(api_key, region)
+    
     # Rate limit test
-    while True:
+    # while True:
         # t = str(datetime.datetime.now())
         # print('%s calling' % t)
-        postmen.GET('whoami')
+        # postmen.GET('whoami')
         # t = str(datetime.datetime.now())
         # print('%s called' % t)
 
-
-    # result = postmen.create('rates', payload_str, time=True, safe=False, raw=False)
+    result = postmen.create('rates', payload_str)
     # r_id = result['id']
     # print('Rate ID: %s'%r_id)
     # time.sleep(10)
+
+    # result = postmen.get('labels')
+    # result = postmen.cancel('labels', '5c9cf943-1520-4b60-9150-edf4d2c75326')
 
     print('\nRESULT:')
     print(json.dumps(result, indent=4, cls=JSONWithDatetimeEncoder))
