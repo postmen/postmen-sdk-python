@@ -136,14 +136,11 @@ class API(object):
         sec_before_reset = response.headers.get('x-ratelimit-reset', None)
         if sec_before_reset:
             self._time_before_reset = time_module.clock() + float(sec_before_reset)
+        
         self._calls_left = response.headers.get('x-ratelimit-remaining', self._calls_left)
-        if self._calls_left:
+        if self._calls_left or isinstance(self._calls_left, six.integer_types):
             self._calls_left = int(self._calls_left)
-
-        # print('time_module.clock()   %f' % time_module.clock())
-        # print('x_ratelimit_reset     %f' % self._time_before_reset)
-        # print('x_ratelimit_remaining %d' % self._calls_left)
-        # print('time_module.clock()   %f' % time_module.clock())
+        
 
         if response.text:
             if raw:
@@ -193,7 +190,7 @@ class API(object):
         }
 
     def _apply_rate_limit(self):
-        if self._calls_left and self._calls_left <= 0:
+        if isinstance(self._calls_left, six.integer_types) and self._calls_left <= 0:
             delta = self._time_before_reset - time_module.clock()
             if delta > 0:
                 self._delay(delta)
