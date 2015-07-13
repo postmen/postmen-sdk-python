@@ -230,7 +230,7 @@ class API(object):
         :type method: str or unicode
         :param path: URL path
         :type path: str or unicode
-        :param body: API call body
+        :param body: API call payload
         :type body: dict or list or str or unicode
         :param query: URL query
         :type query: dict or str or unicode
@@ -243,7 +243,9 @@ class API(object):
         :param proxy: Proxy for HTTP calls (overwrite constructor value)
         :type proxy: str or unicode
         :param retry: True to retry calls in case of retriable errors (overwrite constructor value)
-        :type retry: bool"""
+        :type retry: bool
+        :returns: API data response
+        :rtype: dict or list or str or unicode"""
         retry = self._retry if retry==None else retry
         raw   = self._raw   if raw==None   else raw
         safe  = self._safe  if safe==None  else safe
@@ -280,7 +282,8 @@ class API(object):
         
         :param path: URL path
         :type path: str or unicode
-        :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()"""
+        :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()
+        :returns: same as API.call()"""
         return self.call('GET', path, **kwargs)
 
     def POST(self, path, body, **kwargs):
@@ -288,9 +291,10 @@ class API(object):
         
         :param path: URL path
         :type path: str or unicode
-        :param body: API call body
+        :param body: API call payload
         :type body: dict or list or str or unicode
-        :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()"""
+        :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()
+        :returns: same as API.call()"""
         return self.call('POST', path, body, **kwargs)
 
     def PUT(self, path, body, **kwargs):
@@ -298,9 +302,10 @@ class API(object):
         
         :param path: URL path
         :type path: str or unicode
-        :param body: API call body
+        :param body: API call payload
         :type body: dict or list or str or unicode
-        :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()"""
+        :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()
+        :returns: same as API.call()"""
         return self.call('PUT', path, body, **kwargs)
 
     def DELETE(self, path, **kwargs):
@@ -308,17 +313,39 @@ class API(object):
         
         :param path: URL path
         :type path: str or unicode
-        :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()"""
+        :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()
+        :returns: same as API.call()"""
         return self.call('DELETE', path, **kwargs)
 
     def get(self, resource, id_=None, **kwargs):
+        """List all or retrieve particular resource (e.g. /labels, /labels/:id)
+        
+        :param resource: resource type (e.g. labels)
+        :type resource: str or unicode
+        :param id_: resource id, None to list all resources
+        :type id_: str or unicode
+        :returns: same as API.call()"""
         method = '%s/%s' % (resource, str(id_)) if id_ else resource
         return self.GET(method, **kwargs)
 
     def create(self, resource, payload, **kwargs):
+        """Create resource object (e.g. label)
+        
+        :param resource: resource type (e.g. labels)
+        :type resource: str or unicode
+        :param payload: API call payload
+        :type payload: dict or list or str or unicode
+        :returns: same as API.call()"""
         return self.POST(resource, payload, **kwargs)
 
     def cancel(self, resource, id_, **kwargs):
+        """Delete/cancel particular resource (e.g. label)
+        
+        :param resource: resource type (e.g. labels)
+        :type resource: str or unicode
+        :param id_: resource id
+        :type id_: str or unicode
+        :returns: same as API.call()"""
         return self.POST('%s/%s/cancel' % (resource, str(id_)), '{"async":false}', **kwargs)
 
 
