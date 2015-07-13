@@ -116,8 +116,7 @@ class API(object):
         :type retry: bool
         :raises PostmenError: if API is missed
         :raises PostmenError: if region or endpoint is missed
-        :raises PostmenError: if version is missed
-        """
+        :raises PostmenError: if version is missed"""
         if not api_key:
             raise PostmenError(message='missed API key')
         if not region and not endpoint:
@@ -221,18 +220,30 @@ class API(object):
         response = requests.request(**params)
         return self._response(response, raw, time)
 
-    def _call(self,
-              method,
-              path,
-              body=None,
-              query=None,
+    def call(
+        self, method, path, body=None,
+        query=None, raw=None, safe=None, time=None, proxy=None, retry=None
+    ):
+        """Create, perform HTTP call to Postmen API, parse and return result.
 
-              raw=None,
-              safe=None,
-              time=None,
-              proxy=None,
-              retry=None):
-        
+        :param method: HTTP method
+        :type method: str or unicode
+        :param path: URL path
+        :type path: str or unicode
+        :param body: API call body
+        :type body: dict or list or str or unicode
+        :param query: URL query
+        :type query: dict or str or unicode
+        :param raw: True to exclude parsing of response JSON strings (overwrite constructor value)
+        :type raw: bool
+        :param safe: True to suppress exceptions. Use getError() instead (overwrite constructor value)
+        :type safe: bool
+        :param time: True to convert ISO time strings to datetime.datetime (overwrite constructor value)
+        :type time: bool
+        :param proxy: Proxy for HTTP calls (overwrite constructor value)
+        :type proxy: str or unicode
+        :param retry: True to retry calls in case of retriable errors (overwrite constructor value)
+        :type retry: bool"""
         retry = self._retry if retry==None else retry
         raw   = self._raw   if raw==None   else raw
         safe  = self._safe  if safe==None  else safe
@@ -243,11 +254,9 @@ class API(object):
             proxy = {'https': proxy}
         else:
             proxy = self._proxy
-
         tries = self._retries if retry else 1
         count = 0
         delay = 0
-
         while True:
             try:
                 return self._call_ones(method, path, body, query, raw, time, proxy)
@@ -257,26 +266,50 @@ class API(object):
                 count = count + 1
                 if count >= tries:
                     return self._report_error(e, safe)
-
                 delay = 1.0 if delay == 0 else delay*2
                 self._delay(delay)
             except Exception, e:
                 return self._report_error(e, safe)
 
     def getError(self):
+        """If safe == True, return last PostmenError"""
         return self._error
 
     def GET(self, path, **kwargs):
-        return self._call('GET', path, **kwargs)
+        """Create, perform HTTP GET call to Postmen API, parse and return result.
+        
+        :param path: URL path
+        :type path: str or unicode
+        :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()"""
+        return self.call('GET', path, **kwargs)
 
     def POST(self, path, body, **kwargs):
-        return self._call('POST', path, body, **kwargs)
+        """Create, perform HTTP POST call to Postmen API, parse and return result.
+        
+        :param path: URL path
+        :type path: str or unicode
+        :param body: API call body
+        :type body: dict or list or str or unicode
+        :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()"""
+        return self.call('POST', path, body, **kwargs)
 
     def PUT(self, path, body, **kwargs):
-        return self._call('PUT', path, body, **kwargs)
+        """Create, perform HTTP PUT call to Postmen API, parse and return result.
+        
+        :param path: URL path
+        :type path: str or unicode
+        :param body: API call body
+        :type body: dict or list or str or unicode
+        :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()"""
+        return self.call('PUT', path, body, **kwargs)
 
     def DELETE(self, path, **kwargs):
-        return self._call('DELETE', path, **kwargs)
+        """Create, perform HTTP DELETE call to Postmen API, parse and return result.
+        
+        :param path: URL path
+        :type path: str or unicode
+        :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()"""
+        return self.call('DELETE', path, **kwargs)
 
     def get(self, resource, id_=None, **kwargs):
         method = '%s/%s' % (resource, str(id_)) if id_ else resource
