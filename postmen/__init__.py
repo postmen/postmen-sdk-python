@@ -13,12 +13,14 @@ __author__ = 'AfterShip <support@aftership.com>'
 
 
 class JSONWithDatetimeEncoder(json.JSONEncoder):
+    """Create JSON string as json.JSONEncoder, convert datetime.datetime objects to ISO format string"""
     def default(self, o):
         o = o.isoformat() if isinstance(o, datetime.datetime) else json.JSONEncoder.default(self, o)
         return o
 
 
 class JSONWithDatetimeDecoder(json.JSONDecoder):
+    """Parse JSON string as json.JSONDecoder, matched strings convert to datetime.datetime"""
     def decode(self, s):
         o = json.JSONDecoder.decode(self, s)
         return self.handleObj(o)
@@ -44,15 +46,16 @@ class JSONWithDatetimeDecoder(json.JSONDecoder):
 
 
 class PostmenError(Exception):
+    """Postmen Errors. Include errors reported by API, related to API (e.g. rate limit) and other exceptions during API calls (e.g. HTTP connectivity issue)."""
     def __init__(self, **kwarg):
         self.meta = kwarg
         self._setDefault('code', None)
         self._setDefault('details', [])
         self._setDefault('retryable', False)
         self._setDefault('message', 'no details')
-        # self.meta['retryable'] = True  # dbg injection
 
     def __str__(self):
+        """Return string representation of error."""
         msg = self.message()+((' (%s)' % str(self.code())) if self.code() else "")
         return msg
 
@@ -61,57 +64,75 @@ class PostmenError(Exception):
             self.meta[key] = default_value
 
     def traceback(self):
+        """Return traceback object of error. Traceback must be passed explicitly thru constructor method."""
         return self.meta['traceback']
 
     def code(self):
+        """Return API error code. May return None if no error code were provided."""
         return self.meta['code']
 
     def message(self):
+        """Return human readable error message."""
         return self.meta['message']
 
     def details(self):
+        """Return API error details array."""
         return self.meta['details']
 
     def retryable(self):
+        """Indicate if API call is retryable."""
         return self.meta['retryable']
 
 
 class API(object):
+    """API calls handler."""
     def __init__(
-        self, 
-        api_key,
-        region=None,
+        self, api_key, region=None, endpoint=None, version='v3', x_agent='python-sdk-0.1',
+        retries=4, raw=False, safe=False, time=False, proxy=None, retry=True
+    ):
+        """Handler constructor.
 
-        endpoint=None,
-        version='v3',
-        x_agent='python-sdk-0.1',
-        retries=4,
-
-        raw=False,
-        safe=False,
-        time=False,
-        proxy=None,
-        retry=True
-    ):    
+        :param api_key: Postmen API key
+        :type api_key: str or unicode
+        :param region: avalible regions: sandbox, us-west, ap-southeast. Part of API endpoint
+        :type region: str or unicode
+        :param endpoint: raw API endpoint string, overwrite region setting
+        :type endpoint: str or unicode
+        :param version: API version, use to create endpoint
+        :type version: str or unicode
+        :param x_agent: HTTP header x-postmen-agent tag value
+        :type x_agent: str or unicode
+        :param retries: number of calls retries in case of retriable errors
+        :type retries: int
+        :param raw: True to exclude parsing of response JSON strings
+        :type raw: bool
+        :param safe: True to suppress exceptions. Use getError() instead
+        :type safe: bool
+        :param time: True to convert ISO time strings to datetime.datetime
+        :type time: bool
+        :param proxy: Proxy for HTTP calls
+        :type proxy: str or unicode
+        :param retry: True to retry calls in case of retriable errors
+        :type retry: bool
+        :raises PostmenError: if API is missed
+        :raises PostmenError: if region or endpoint is missed
+        :raises PostmenError: if version is missed
+        """
         if not api_key:
             raise PostmenError(message='missed API key')
         if not region and not endpoint:
             raise PostmenError(message='missed region')
-        
+        if not version:
+            raise PostmenError(message='missed API version')
         self._retries = retries
-
         self._error = None
         self._version = version
-
         self._calls_left = None
         self._time_before_reset = None
-
         self._endpoint = endpoint if endpoint else 'https://%s-api.postmen.com' % region
-        
         self._headers = {'content-type': 'application/json'}
         self._headers['postmen-api-key'] = api_key
         self._headers['x-postmen-agent'] = x_agent
-
         self._raw = raw
         self._safe = safe
         self._time = time
@@ -119,7 +140,6 @@ class API(object):
         self._retry = retry
 
     def _delay(self, sec):
-        # print('delay for %f' % sec)
         time_module.sleep(sec)
 
     def _report_error(self, e, safe):
@@ -138,9 +158,8 @@ class API(object):
             self._time_before_reset = time_module.clock() + float(sec_before_reset)
         
         self._calls_left = response.headers.get('x-ratelimit-remaining', self._calls_left)
-        if self._calls_left or isinstance(self._calls_left, six.integer_types):
-            self._calls_left = int(self._calls_left)
-        
+        if self._calls_left:
+            self._calls_left = int(self._calls_left)        
 
         if response.text:
             if raw:
@@ -271,9 +290,7 @@ class API(object):
 
 
 if __name__ == "__main__":
-    import doctest
-    print("Running smoke tests")
-
+    print("Smoke test")
     region = 'sandbox'
     api_key = 'API_KEY'
     shipper_id = 'SHIPPER_ACCOUNT_ID'
@@ -335,88 +352,10 @@ if __name__ == "__main__":
             }]
         }
     }
-    payload_str = '''{
-    "shipper_accounts": [{
-        "id": "b366c343-b754-4981-bee8-e233f79fd53a"
-    }],
-    "is_document": false,
-    "shipment": {
-        "ship_from": {
-            "contact_name": "Jameson McLaughlin",
-            "company_name": "Bode, Lind and Powlowski",
-            "street1": "8918 Borer Ramp",
-            "city": "Los Angeles",
-            "state": "CA",
-            "postal_code": "90001",
-            "country": "USA",
-            "type": "business"
-        },
-        "ship_to": {
-            "contact_name": "Dr. Moises Corwin",
-            "phone": "1-140-225-6410",
-            "email": "Giovanna42@yahoo.com",
-            "street1": "28292 Daugherty Orchard",
-            "city": "Beverly Hills",
-            "postal_code": "90209",
-            "state": "CA",
-            "country": "USA",
-            "type": "residential"
-        },
-        "parcels": [{
-            "description": "iMac (Retina 5K, 27-inch, Late 2014)",
-            "box_type": "custom",
-            "weight": {
-                "value": 9.54,
-                "unit": "kg"
-            },
-            "dimension": {
-                "width": 65,
-                "height": 52,
-                "depth": 21,
-                "unit": "cm"
-            },
-            "items": [{
-                "description": "iMac (Retina 5K, 27-inch, Late 2014)",
-                "origin_country": "USA",
-                "quantity": 1,
-                "price": {
-                    "amount": 1999,
-                    "currency": "USD"
-                },
-                "weight": {
-                    "value": 9.54,
-                    "unit": "kg"
-                },
-                "sku": "imac2014"
-            }]
-        }]
-    }
-}
-    '''
-
-    
-
     postmen = API(api_key, region)
-    
-    # Rate limit test
-    # while True:
-        # t = str(datetime.datetime.now())
-        # print('%s calling' % t)
-        # postmen.GET('whoami')
-        # t = str(datetime.datetime.now())
-        # print('%s called' % t)
-
     result = postmen.create('rates', payload_str)
-    # r_id = result['id']
-    # print('Rate ID: %s'%r_id)
-    # time.sleep(10)
-
-    # result = postmen.get('labels')
-    # result = postmen.cancel('labels', '5c9cf943-1520-4b60-9150-edf4d2c75326')
-
     print('\nRESULT:')
     print(json.dumps(result, indent=4, cls=JSONWithDatetimeEncoder))
-
     e = postmen.getError();
     if e:
         print('\nERROR:')
@@ -427,5 +366,3 @@ if __name__ == "__main__":
         print('\tretryable: %s' % e.retryable())
         print('\ttraceback: %s\n' % e.traceback())
         traceback.print_tb(e.traceback())
-
-    print("\ndone!")
