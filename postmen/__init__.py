@@ -1,3 +1,6 @@
+"""API and PostmenError classes are intended for SDK users.
+"""
+
 import sys
 import json
 import time as time_module
@@ -7,46 +10,15 @@ import threading
 
 import six
 import requests
-import dateutil.parser
+
+from jsont import JSONWithDatetimeEncoder
+from jsont import JSONWithDatetimeDecoder
 
 __author__ = 'AfterShip <support@aftership.com>'
 
 
-class JSONWithDatetimeEncoder(json.JSONEncoder):
-    """Create JSON string as json.JSONEncoder, convert datetime.datetime objects to ISO format string"""
-    def default(self, o):
-        o = o.isoformat() if isinstance(o, datetime.datetime) else json.JSONEncoder.default(self, o)
-        return o
-
-
-class JSONWithDatetimeDecoder(json.JSONDecoder):
-    """Parse JSON string as json.JSONDecoder, matched strings convert to datetime.datetime"""
-    def decode(self, s):
-        o = json.JSONDecoder.decode(self, s)
-        return self.handleObj(o)
-
-    def handleObj(self, o):
-        if isinstance(o, dict):
-            keys = list(o.keys())
-            for key in keys:
-                val = o[key]
-                o[key] = self.handleObj(val)
-            return o
-        if isinstance(o, list):
-            c = []
-            for val in o:
-                c.append(self.handleObj(val))
-            return c
-        if isinstance(o, six.string_types):
-            try:
-                return dateutil.parser.parse(o)
-            except:
-                pass
-        return o
-
-
 class PostmenError(Exception):
-    """Postmen Errors. Include errors reported by API, related to API (e.g. rate limit) and other exceptions during API calls (e.g. HTTP connectivity issue)."""
+    """Include errors reported by API, related to API (e.g. rate limit) and other exceptions during API calls (e.g. HTTP connectivity issue)."""
     def __init__(self, **kwarg):
         self.meta = kwarg
         self._setDefault('code', None)
@@ -55,7 +27,6 @@ class PostmenError(Exception):
         self._setDefault('message', 'no details')
 
     def __str__(self):
-        """Return string representation of error."""
         msg = self.message()+((' (%s)' % str(self.code())) if self.code() else "")
         return msg
 
@@ -64,59 +35,65 @@ class PostmenError(Exception):
             self.meta[key] = default_value
 
     def traceback(self):
-        """Return traceback object of error. Traceback must be passed explicitly thru constructor method."""
+        """:returns: error's traceback object. Traceback must be passed explicitly thru constructor method
+        :rtype: traceback object"""
         return self.meta['traceback']
 
     def code(self):
-        """Return API error code. May return None if no error code were provided."""
+        """:returns: API error code
+        :rtype: int or None"""
         return self.meta['code']
 
     def message(self):
-        """Return human readable error message."""
+        """:returns: API error human readable message
+        :rtype: str or unicode"""
         return self.meta['message']
 
     def details(self):
-        """Return API error details array."""
+        """:returns: API error details
+        :rtype: list"""
         return self.meta['details']
 
     def retryable(self):
-        """Indicate if API call is retryable."""
+        """:returns: indicate if API call is retryable
+        :rtype: bool"""
         return self.meta['retryable']
 
 
 class API(object):
-    """API calls handler."""
+    """API calls handler.
+
+    :param api_key: Postmen API key
+    :type api_key: str or unicode
+    :param region: avalible regions: sandbox, us-west, ap-southeast. Part of API endpoint
+    :type region: str or unicode
+    :param endpoint: raw API endpoint string, overwrite region setting
+    :type endpoint: str or unicode
+    :param version: API version, use to create endpoint
+    :type version: str or unicode
+    :param x_agent: HTTP header x-postmen-agent tag value
+    :type x_agent: str or unicode
+    :param retries: number of calls retries in case of retriable errors
+    :type retries: int
+    :param raw: True to exclude parsing of response JSON strings
+    :type raw: bool
+    :param safe: True to suppress exceptions. Use getError() instead
+    :type safe: bool
+    :param time: True to convert ISO time strings to datetime.datetime
+    :type time: bool
+    :param proxy: Proxy for HTTP calls
+    :type proxy: str or unicode
+    :param retry: True to retry calls in case of retriable errors
+    :type retry: bool
+    
+    :raises PostmenError: if API is missed
+    :raises PostmenError: if region or endpoint is missed
+    :raises PostmenError: if version is missed
+    """
     def __init__(
         self, api_key, region=None, endpoint=None, version='v3', x_agent='python-sdk-0.1',
         retries=4, raw=False, safe=False, time=False, proxy=None, retry=True
     ):
-        """Handler constructor.
-
-        :param api_key: Postmen API key
-        :type api_key: str or unicode
-        :param region: avalible regions: sandbox, us-west, ap-southeast. Part of API endpoint
-        :type region: str or unicode
-        :param endpoint: raw API endpoint string, overwrite region setting
-        :type endpoint: str or unicode
-        :param version: API version, use to create endpoint
-        :type version: str or unicode
-        :param x_agent: HTTP header x-postmen-agent tag value
-        :type x_agent: str or unicode
-        :param retries: number of calls retries in case of retriable errors
-        :type retries: int
-        :param raw: True to exclude parsing of response JSON strings
-        :type raw: bool
-        :param safe: True to suppress exceptions. Use getError() instead
-        :type safe: bool
-        :param time: True to convert ISO time strings to datetime.datetime
-        :type time: bool
-        :param proxy: Proxy for HTTP calls
-        :type proxy: str or unicode
-        :param retry: True to retry calls in case of retriable errors
-        :type retry: bool
-        :raises PostmenError: if API is missed
-        :raises PostmenError: if region or endpoint is missed
-        :raises PostmenError: if version is missed"""
         if not api_key:
             raise PostmenError(message='missed API key')
         if not region and not endpoint:
@@ -221,7 +198,7 @@ class API(object):
         return self._response(response, raw, time)
 
     def call(
-        self, method, path, body=None,
+        self, method, path, body,
         query=None, raw=None, safe=None, time=None, proxy=None, retry=None
     ):
         """Create, perform HTTP call to Postmen API, parse and return result.
@@ -244,8 +221,12 @@ class API(object):
         :type proxy: str or unicode
         :param retry: True to retry calls in case of retriable errors (overwrite constructor value)
         :type retry: bool
+        
         :returns: API data response
-        :rtype: dict or list or str or unicode"""
+        :rtype: dict or list or str or unicode
+        
+        :raises PostmenError: all errors and exceptions
+        """
         retry = self._retry if retry==None else retry
         raw   = self._raw   if raw==None   else raw
         safe  = self._safe  if safe==None  else safe
@@ -283,8 +264,10 @@ class API(object):
         :param path: URL path
         :type path: str or unicode
         :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()
-        :returns: same as API.call()"""
-        return self.call('GET', path, **kwargs)
+        
+        :returns: same as API.call()
+        """
+        return self.call('GET', path, None, **kwargs)
 
     def POST(self, path, body, **kwargs):
         """Create, perform HTTP POST call to Postmen API, parse and return result.
@@ -294,7 +277,9 @@ class API(object):
         :param body: API call payload
         :type body: dict or list or str or unicode
         :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()
-        :returns: same as API.call()"""
+        
+        :returns: same as API.call()
+        """
         return self.call('POST', path, body, **kwargs)
 
     def PUT(self, path, body, **kwargs):
@@ -305,7 +290,9 @@ class API(object):
         :param body: API call payload
         :type body: dict or list or str or unicode
         :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()
-        :returns: same as API.call()"""
+        
+        :returns: same as API.call()
+        """
         return self.call('PUT', path, body, **kwargs)
 
     def DELETE(self, path, **kwargs):
@@ -314,8 +301,10 @@ class API(object):
         :param path: URL path
         :type path: str or unicode
         :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()
-        :returns: same as API.call()"""
-        return self.call('DELETE', path, **kwargs)
+        
+        :returns: same as API.call()
+        """
+        return self.call('DELETE', path, None, **kwargs)
 
     def get(self, resource, id_=None, **kwargs):
         """List all or retrieve particular resource (e.g. /labels, /labels/:id)
@@ -324,7 +313,9 @@ class API(object):
         :type resource: str or unicode
         :param id_: resource id, None to list all resources
         :type id_: str or unicode
-        :returns: same as API.call()"""
+        
+        :returns: same as API.call()
+        """
         method = '%s/%s' % (resource, str(id_)) if id_ else resource
         return self.GET(method, **kwargs)
 
@@ -335,7 +326,9 @@ class API(object):
         :type resource: str or unicode
         :param payload: API call payload
         :type payload: dict or list or str or unicode
-        :returns: same as API.call()"""
+        
+        :returns: same as API.call()
+        """
         return self.POST(resource, payload, **kwargs)
 
     def cancel(self, resource, id_, **kwargs):
@@ -345,7 +338,9 @@ class API(object):
         :type resource: str or unicode
         :param id_: resource id
         :type id_: str or unicode
-        :returns: same as API.call()"""
+        
+        :returns: same as API.call()
+        """
         return self.POST('%s/%s/cancel' % (resource, str(id_)), '{"async":false}', **kwargs)
 
 
@@ -413,7 +408,8 @@ if __name__ == "__main__":
         }
     }
     postmen = API(api_key, region)
-    result = postmen.create('rates', payload_str)
+    # result = postmen.create('rates', payload)
+    result = postmen.get('labels')
     print('\nRESULT:')
     print(json.dumps(result, indent=4, cls=JSONWithDatetimeEncoder))
     e = postmen.getError();
