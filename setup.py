@@ -1,12 +1,15 @@
 from setuptools import setup
 from codecs import open  # To use a consistent encoding
 from os import path
+from pip.req import parse_requirements
 
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the relevant file
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
+
+reqs = parse_requirements(path.join(here, 'requirements.txt'))
 
 setup(
     name='postmen',
@@ -20,10 +23,10 @@ setup(
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/AfterShip/aftership-python',
+    url='https://github.com/postmen/sdk-python',
 
     # Download path
-    download_url = 'https://github.com/AfterShip/aftership-python/tarball/0.1',
+    download_url = 'https://github.com/postmen/sdk-python/tarball/0.1',
 
     # Author details
     author='AfterShip',
@@ -64,5 +67,5 @@ setup(
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
     packages=['postmen'],
-    install_requires=['requests', 'python-dateutil', 'six'],
+    install_requires=reqs,
 )
