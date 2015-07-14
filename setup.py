@@ -63,6 +63,6 @@ setup(
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
-    packages=['aftership'],
+    packages=['postmen'],
     install_requires=['requests', 'python-dateutil', 'six'],
 )
