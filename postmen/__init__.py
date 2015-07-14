@@ -59,6 +59,10 @@ class PostmenError(Exception):
         :rtype: bool"""
         return self.meta['retryable']
 
+if six.PY2:
+    from rp2 import _raise
+else:
+    from rp3 import _raise
 
 class API(object):
     """API calls handler.
@@ -122,11 +126,11 @@ class API(object):
         type, value, traceback = sys.exc_info()
         kwargs = e.meta if isinstance(e, PostmenError) else {'message': str(e)}
         kwargs['traceback'] = traceback
-        e = PostmenError(**kwargs)
+        pe = PostmenError(**kwargs)
         if safe:
-            self._error = e
+            self._error = pe
             return None
-        raise e, None, traceback
+        _raise(pe, e, traceback)
 
     def _response(self, response, raw, time):
         sec_before_reset = response.headers.get('x-ratelimit-reset', None)
@@ -243,7 +247,7 @@ class API(object):
         while True:
             try:
                 return self._call_ones(method, path, body, query, raw, time, proxy)
-            except PostmenError, e:
+            except PostmenError as e:
                 if not e.retryable():
                     return self._report_error(e, safe)
                 count = count + 1
@@ -251,7 +255,7 @@ class API(object):
                     return self._report_error(e, safe)
                 delay = 1.0 if delay == 0 else delay*2
                 self._delay(delay)
-            except Exception, e:
+            except Exception as e:
                 return self._report_error(e, safe)
 
     def getError(self):
