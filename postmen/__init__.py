@@ -422,7 +422,6 @@ if __name__ == "__main__":
         }
     }
     postmen = API(api_key, region)
-    # result = postmen.create('rates', payload)
     result = postmen.get('labels')
     print('\nRESULT:')
     print(json.dumps(result, indent=4, cls=JSONWithDatetimeEncoder))
