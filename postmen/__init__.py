@@ -105,7 +105,7 @@ class API(object):
     :raises PostmenError: if version is missed
     """
     def __init__(
-        self, api_key, region=None, endpoint=None, version='v3', x_agent='python-sdk-0.1',
+        self, api_key, region=None, endpoint=None, version='v3', x_agent='python-sdk-0.2',
         retries=4, raw=False, safe=False, time=False, proxy=None, retry=True
     ):
         if not api_key:
