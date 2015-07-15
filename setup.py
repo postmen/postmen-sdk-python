@@ -9,7 +9,8 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-reqs = parse_requirements(path.join(here, 'requirements.txt'))
+with open(path.join(here, 'requirements.txt')) as f:
+    reqs = f.read().splitlines()
 
 setup(
     name='postmen',
