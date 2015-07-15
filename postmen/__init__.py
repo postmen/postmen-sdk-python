@@ -13,14 +13,24 @@ import requests
 
 from jsont import JSONWithDatetimeEncoder
 from jsont import JSONWithDatetimeDecoder
+if six.PY2:
+    from rp2 import _raise
+else:
+    from rp3 import _raise
 
 __author__ = 'AfterShip <support@aftership.com>'
 
 
 class PostmenError(Exception):
     """Include errors reported by API, related to API (e.g. rate limit) and other exceptions during API calls (e.g. HTTP connectivity issue)."""
-    def __init__(self, **kwarg):
-        self.meta = kwarg
+    def __init__(self, message=None, **kwarg):
+        self.a = kwarg
+        if 'meta' not in self.a:
+            self.a['meta'] = {}
+        if 'data' not in self.a:
+            self.a['data'] = None
+        if message:
+            self.a['meta']['message'] = message
         self._setDefault('code', None)
         self._setDefault('details', [])
         self._setDefault('retryable', False)
@@ -31,38 +41,38 @@ class PostmenError(Exception):
         return msg
 
     def _setDefault(self, key, default_value):
-        if key not in self.meta:
-            self.meta[key] = default_value
+        if key not in self.a['meta']:
+            self.a['meta'][key] = default_value
 
     def traceback(self):
         """:returns: error's traceback object. Traceback must be passed explicitly thru constructor method
         :rtype: traceback object"""
-        return self.meta['traceback']
+        return self.a['meta']['traceback']
 
     def code(self):
         """:returns: API error code
         :rtype: int or None"""
-        return self.meta['code']
+        return self.a['meta']['code']
 
     def message(self):
         """:returns: API error human readable message
         :rtype: str or unicode"""
-        return self.meta['message']
+        return self.a['meta']['message']
 
     def details(self):
         """:returns: API error details
         :rtype: list"""
-        return self.meta['details']
+        return self.a['meta']['details']
 
     def retryable(self):
         """:returns: indicate if API call is retryable
         :rtype: bool"""
-        return self.meta['retryable']
+        return self.a['meta']['retryable']
 
-if six.PY2:
-    from rp2 import _raise
-else:
-    from rp3 import _raise
+    def data(self):
+        """:returns: API call data (if any)
+        :rtype: dict"""
+        return self.a['data']
 
 class API(object):
     """API calls handler.
@@ -81,7 +91,7 @@ class API(object):
     :type retries: int
     :param raw: True to exclude parsing of response JSON strings
     :type raw: bool
-    :param safe: True to suppress exceptions. Use getError() instead
+    :param safe: True to suppress exceptions on API calls (only). Use getError() instead
     :type safe: bool
     :param time: True to convert ISO time strings to datetime.datetime
     :type time: bool
@@ -124,8 +134,10 @@ class API(object):
 
     def _report_error(self, e, safe):
         type, value, traceback = sys.exc_info()
-        kwargs = e.meta if isinstance(e, PostmenError) else {'message': str(e)}
-        kwargs['traceback'] = traceback
+        kwargs = e.a if isinstance(e, PostmenError) else {'meta': {'message': str(e)}}
+        if 'meta' not in kwargs:
+            kwargs['meta'] = {}
+        kwargs['meta']['traceback'] = traceback
         pe = PostmenError(**kwargs)
         if safe:
             self._error = pe
@@ -149,13 +161,11 @@ class API(object):
                 ret = json.loads(response.text, cls=kls)
                 meta_code = ret.get('meta', {}).get('code', None)
                 if not meta_code:
-                    raise PostmenError(message='API response missed meta info')
-
-                # TODO: show Teddy, is error-identification correct?
+                    raise PostmenError(message='API response missed meta info', **ret)
                 if int(meta_code / 1000) == 4:
-                    raise PostmenError(**ret['meta'])
+                    raise PostmenError(**ret)
                 if 'data' not in ret:
-                    raise PostmenError(message='no data returned by API server')
+                    raise PostmenError(message='no data returned by API server', **ret)
                 ret = ret['data']
         else:
             raise PostmenError(message='no response from API server')
@@ -424,5 +434,6 @@ if __name__ == "__main__":
         print('\tmessage: %s' % e.message())
         print('\tdetails: %s' % e.details())
         print('\tretryable: %s' % e.retryable())
+        print('\tdata: %s' % e.data())
         print('\ttraceback: %s\n' % e.traceback())
         traceback.print_tb(e.traceback())
