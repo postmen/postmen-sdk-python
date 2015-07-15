@@ -9,16 +9,13 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-with open('requirements.txt', encoding='utf-8') as f:
-    reqs = f.read().splitlines()
-
 setup(
     name='postmen',
 
     # Versions should comply with PEP440. For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='0.2',
+    version='0.1',
 
     description='Python SDK of Postmen API',
     long_description=long_description,
@@ -67,5 +64,9 @@ setup(
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
     packages=['postmen'],
-    install_requires=reqs,
+    install_requires=[
+        'requests==2.7.0',
+        'python-dateutil==2.4.2',
+        'six==1.9.0'
+    ]
 )
