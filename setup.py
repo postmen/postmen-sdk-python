@@ -29,8 +29,8 @@ setup(
     download_url = 'https://github.com/postmen/sdk-python/tarball/0.1',
 
     # Author details
-    author='AfterShip',
-    author_email='support@aftership.com',
+    author='Postmen',
+    author_email='support@postmen.com',
 
     # Choose your license
     license='MIT',
@@ -53,7 +53,6 @@ setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.2',
@@ -62,7 +61,7 @@ setup(
     ],
 
     # What does your project relate to?
-    keywords='aftership api binding tracking track post mail airmail logistics shipping',
+    keywords='postmen api binding post mail airmail logistics shipping label rate rates',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().

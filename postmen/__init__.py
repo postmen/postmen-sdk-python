@@ -18,7 +18,7 @@ if six.PY2:
 else:
     from rp3 import _raise
 
-__author__ = 'AfterShip <support@aftership.com>'
+__author__ = 'Postmen <support@postmen.com>'
 
 
 class PostmenError(Exception):

@@ -52,8 +52,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Postmen Python SDK'
-copyright = u'2015, AfterShip'
-author = u'AfterShip <support@aftership.com>'
+copyright = u'2015, Postmen'
+author = u'Postmen <support@postmen.com>'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
