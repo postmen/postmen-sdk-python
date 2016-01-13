@@ -145,13 +145,21 @@ class API(object):
         _raise(pe, e, traceback)
 
     def _response(self, response, raw, time):
+        # print response.headers
+        # print response.text
+
         sec_before_reset = response.headers.get('x-ratelimit-reset', None)
+        sec_before_reset = int(sec_before_reset) / 1000
         if sec_before_reset:
-            self._time_before_reset = time_module.clock() + float(sec_before_reset)
-        
+            if not self._time_before_reset or self._time_before_reset < sec_before_reset:
+                self._time_before_reset = int(sec_before_reset)
+
         self._calls_left = response.headers.get('x-ratelimit-remaining', self._calls_left)
         if self._calls_left:
-            self._calls_left = int(self._calls_left)        
+            self._calls_left = int(self._calls_left)
+
+        # print 'self._time_before_reset', self._time_before_reset
+        # print 'self._calls_left', self._calls_left
 
         if response.text:
             if raw:
@@ -160,9 +168,10 @@ class API(object):
                 kls = JSONWithDatetimeDecoder if time else json.JSONDecoder
                 ret = json.loads(response.text, cls=kls)
                 meta_code = ret.get('meta', {}).get('code', None)
+                # print ret
                 if not meta_code:
                     raise PostmenError(message='API response missed meta info', **ret)
-                if int(meta_code / 1000) == 4:
+                if int(meta_code) != 200 and int(meta_code / 1000) != 3:
                     raise PostmenError(**ret)
                 if 'data' not in ret:
                     raise PostmenError(message='no data returned by API server', **ret)
@@ -200,8 +209,11 @@ class API(object):
 
     def _apply_rate_limit(self):
         if isinstance(self._calls_left, six.integer_types) and self._calls_left <= 0:
-            delta = self._time_before_reset - time_module.clock()
+            # print 'self._time_before_reset', self._time_before_reset
+            # print 'int(time_module.time())', int(time_module.time())
+            delta = self._time_before_reset - int(time_module.time())
             if delta > 0:
+                # print 'apply delay', delta
                 self._delay(delta)
 
     def _call_ones(self, method, path, body, query, raw, time, proxy):
