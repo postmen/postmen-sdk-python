@@ -128,6 +128,94 @@ Labels
 
 Crate a label
 
+.. code-block:: python
+
+    from postmen import Labels
+    labels = Labels('API_KEY', 'REGION')
+    parcel = {
+        'box_type': 'custom',
+        'dimension': {
+            'depth': 40,
+            'height': 30,
+            'unit': u'cm',
+            'width': 20
+        },
+        'items': [
+            {
+                'description': 'Food Bar',
+                'hs_code': '11111111',
+                'origin_country': 'USA',
+                'price':
+                    {
+                        'amount': 50,
+                        'currency': u'USD'
+                    },
+                'quantity': 2,
+                'sku': 'Epic_Food_Bar',
+                'weight': {
+                    'unit': u'kg',
+                    'value': 0.6
+                }
+            }
+        ],
+        'weight': {
+            'unit': u'kg',
+            'value': 1.5
+        }
+    }
+    sender = {
+        'city': 'Grove',
+        'company_name': 'Nottingham Inc.',
+        'contact_name': 'Nottingham Inc.',
+        'country': 'USA',
+        'email': 'test@test.com',
+        'phone': '1-403-504-5496',
+        'postal_code': '74344',
+        'state': 'OK',
+        'street1': '2511 S. Main St.',
+        'type': 'business'
+    }
+    receiver = {
+        'city': 'Medicine Hat',
+        'contact_name': 'Rick McLeod (RM Consulting)',
+        'country': 'CAN',
+        'email': 'test@test.test',
+        'phone': '1-403-504-5496',
+        'postal_code': 'T1C1Z9',
+        'state': 'Alberta',
+        'street1': '71 Terrace Crescent NE',
+        'street2': 'This is the second streeet',
+        'type': 'residential'
+    }
+    shipment = {
+        'async': False,
+        'customs': {
+            'billing': {
+                'method': {
+                    'account_number': '950000002',
+                    'type': 'account'
+                },
+                'paid_by': 'shipper'
+            },
+            'purpose': 'gift'
+        },
+        'is_document': False,
+        'paper_size': 'default',
+        'return_shipment': False,
+        'service_type': 'dhl_express_0900',
+        'shipment': {
+            'parcels': [
+                parcel
+            ],
+            'ship_from': sender,
+            'ship_to': receiver
+        },
+        'shipper_account': {
+            'id': '00000000-0000-0000-0000-000000000000'
+        }
+    }
+    result = labels.create(shipment)
+
 List all labels
 
 .. code-block:: python
