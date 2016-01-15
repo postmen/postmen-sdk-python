@@ -22,52 +22,134 @@ Download the code archive, unzip it, create/activate `virtualenv <http://virtual
 Usage
 =====
 
-Quick Start
------------
+Rates
+-----
 
-The following code list all labels for API key.
-
-.. code-block:: python
-
-    import postmen
-    try:
-        api = postmen.API('API_KEY', 'sandbox')
-        labels = api.get('labels')
-    except PostmenError, e:
-        print('Error: %s' % e)
-
-Get API object
---------------
-
-Import postmen module and obtain API object. Pass valid API key and region (sandbox, us-west, ap-southeast).
+Calculate rates
 
 .. code-block:: python
 
-    import postmen
-    api = postmen.API('API_KEY', 'REGION')
+    from postmen import Rates
+    rates = Rates('API_KEY', 'REGION')
+    item = {
+        'sku': 'PS4-2015',
+        'origin_country': 'JPN',
+        'description': 'PS4',
+        'weight': {
+            'unit': 'kg',
+            'value': 0.6
+        },
+        'price': {
+            'currency': 'JPY',
+            'amount': 50
+        },
+        'quantity': 2
+    }
+    sender = {
+        'city': 'Hung Hom',
+        'street1': 'Flat A, 29/F, Block 17 Laguna Verde',
+        'phone': '96679797',
+        'state': 'Kowloon',
+        'country': 'HKG',
+        'contact_name': 'Yin Ting Wong',
+        'type': 'residential',
+        'email': 'test@test.test'
+    }
+    receiver = {
+        'city': 'Yorktown',
+        'street1': '9504 W Smith ST',
+        'phone': '7657168649',
+        'state': 'Indiana',
+        'postal_code': '47396',
+        'country': 'USA',
+        'contact_name': 'Mike Carunchia',
+        'type': 'residential',
+        'email': 'test@test.test'
+    }
+    query = {
+        'async': False,
+        'shipment': {
+            'ship_from': sender,
+            'ship_to': receiver,
+            'parcels': [
+                {
+                    'items': [
+                        item
+                    ],
+                    'weight': {
+                        'unit': 'kg',
+                        'value': 0.5
+                    },
+                    'box_type': 'custom',
+                    'dimension': {
+                        'width': 20,
+                        'depth': 10,
+                        'unit': 'cm',
+                        'height': 10
+                    }
+                }
+            ]
+        },
+        'shipper_accounts':[
+            {
+                'id': '00000000-0000-0000-0000-000000000000'
+            }
+        ],
+        'is_document': False
+    }
+    result = rates.calculate(query)
 
-Find detailed description in `API class documentation <http://postmen-python-sdk.readthedocs.org/en/latest/postmen.html#postmen.API>`_.
+List all rates
 
-Make API calls
---------------
+.. code-block:: python
 
-Common method to make API call (normally you shouldn't use it directly):
+    from postmen import Rates
+    rates = Rates('API_KEY', 'REGION')
+    result = rates.list_all()
 
-#. **.call(method, path, payload)**
+Retrieve a rate
 
-HTTP-methods access to directly map API docs to SDK calls:
+Labels
+------
 
-#. **.GET(path)**
-#. **.POST(path, payload)**
+Crate a label
 
-User-friendly API access methods:
+List all labels
 
-#. **.get(resource, [id])**: get all resources (e.g. `list all labels <https://docs.postmen.com/#label-list-all-labels>`_) or specific resource if id is specified (e.g. `retrieve a label <https://docs.postmen.com/#label-retrieve-a-label>`_)
-#. **.create(resource, payload)**: create a new resource (e.g. `create label <https://docs.postmen.com/#label-create-a-label>`_)
-#. **.cancel(resource, id)**: delete/cancel a resource (e.g. `cancel a label <https://docs.postmen.com/#label-cancel-a-label>`_)
+.. code-block:: python
 
-**path, resource, id** are strings.
+    from postmen import Labels
+    labels = Labels('API_KEY', 'REGION')
+    result = labels.list_all()
 
-**payload** is JSON string or dict/list.
+Retrieve a label
 
-All methods accept optional arguments for **.call()**. Find detailed description in `API.call() documentation <http://postmen-python-sdk.readthedocs.org/en/latest/postmen.html#postmen.API.call>`_.
+Manifests
+---------
+
+Create a manifest
+
+List all manifests
+
+.. code-block:: python
+
+    from postmen import Manifests
+    manifests = Manifests('API_KEY', 'REGION')
+    result = manifests.list_all()
+
+Retrieve a manifest
+
+Cancel Labels
+-------------
+
+Cancel a label
+
+List all cancel labels
+
+.. code-block:: python
+
+    from postmen import CancelLabels
+    cancel_labels = CancelLabels('API_KEY', 'REGION')
+    result = cancel_labels.list_all()
+
+Retrieve a cancel label

@@ -377,7 +377,7 @@ class Rates(API):
     def __init__(self, *args, **kwargs):
         super(Rates, self).__init__(*args, **kwargs)
     def calculate(self, query, **kwargs) :
-        print query
+        return self.POST('rates', query, **kwargs)
     def list_all(self, **kwargs) :
         return self.get('rates', None, **kwargs)
     def retrieve(self, id, **kwargs) :
@@ -387,7 +387,7 @@ class Labels(API):
     def __init__(self, *args, **kwargs):
         super(Labels, self).__init__(*args, **kwargs)
     def create(self, body, **kwargs) :
-        return self.POST('/v3/labels', body, **kwargs)
+        return self.POST('labels', body, **kwargs)
     def list_all(self, **kwargs) :
         return self.get('labels', None, **kwargs)
     def retrieve(self, id, **kwargs) :
@@ -397,21 +397,21 @@ class Manifests(API):
     def __init__(self, *args, **kwargs):
         super(Manifests, self).__init__(*args, **kwargs)
     def create(self, query, **kwargs) :
-        print query
-    def list_all(self, **kwargs) :
-        print "list all"
+        return self.POST('manifests', body, **kwargs)
+    def list_all(self, _query, **kwargs) :
+        return self.get('manifests', None, query = _query, **kwargs)
     def retrieve(self, id, **kwargs) :
-        print id
+        return self.get('manifests', id, **kwargs)
 
 class CancelLabels(API):
     def __init__(self, *args, **kwargs):
         super(CancelLabels, self).__init__(*args, **kwargs)
     def cancel(self, query, **kwargs) :
-        print query
-    def list_all(self, **kwargs) :
-        print "list all"
+        return self.POST('cancel-labels', body, **kwargs)
+    def list_all(self, _query, **kwargs) :
+        return self.get('labels', None, query = _query, **kwargs)
     def retrieve(self, id, **kwargs) :
-        print id
+        return self.get('cancel-labels', id, **kwargs)
 
 if __name__ == "__main__":
     print("Smoke test")
