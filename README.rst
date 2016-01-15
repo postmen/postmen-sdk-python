@@ -1,3 +1,10 @@
+About
+=====
+
+Easiest way to integrate with multiple shipping carriers for online retailers and marketplaces of any size.
+
+Add shipping functionality to your application for printing labels, calculating rates and submitting manifests.
+
 Installation
 ============
 
@@ -109,6 +116,13 @@ List all rates
 
 Retrieve a rate
 
+.. code-block:: python
+
+    from postmen import Rates
+    rates = Rates('API_KEY', 'REGION')
+    result = rates.retrieve('RATE_ID')
+
+
 Labels
 ------
 
@@ -123,6 +137,12 @@ List all labels
     result = labels.list_all()
 
 Retrieve a label
+
+.. code-block:: python
+
+    from postmen import Labels
+    labels = Labels('API_KEY', 'REGION')
+    result = labels.retrieve('LABEL_ID')
 
 Manifests
 ---------
@@ -139,6 +159,13 @@ List all manifests
 
 Retrieve a manifest
 
+.. code-block:: python
+
+    from postmen import Manifests
+    manifests = Manifests('API_KEY', 'REGION')
+    result = manifests.retrieve('MANIFEST_ID')
+
+
 Cancel Labels
 -------------
 
@@ -153,3 +180,65 @@ List all cancel labels
     result = cancel_labels.list_all()
 
 Retrieve a cancel label
+
+.. code-block:: python
+
+    from postmen import CancelLabels
+    cancel_labels = CancelLabels('API_KEY', 'REGION')
+    result = cancel_labels.retrieve('CANCEL_LABEL_ID')
+
+Additional options
+------------------
+
+Custom endpoint
+
+.. code-block:: python
+
+    from postmen import Rates
+    host = 'https://api.examples.com'
+    rates = Rates('API_KEY', 'REGION', endpoint = host)
+    result = rates.retrieve('RATE_ID')
+
+Proxy
+
+.. code-block:: python
+
+    from postmen import Rates
+    proxy_server = 'https://username:password@hostname:post'
+    rates = Rates('API_KEY', 'REGION', proxy = proxy_server)
+    result = rates.retrieve('RATE_ID')
+
+Safe mode
+
+.. code-block:: python
+
+    from postmen import Rates
+    rates = Rates('API_KEY', 'REGION', safe = True)
+    result = rates.retrieve('RATE_ID')
+    if result == None :
+        print rates.getError()
+
+Raw JSON response
+
+.. code-block:: python
+
+    from postmen import Rates
+    rates = Rates('API_KEY', 'REGION', raw = True)
+    raw_json = rates.retrieve('RATE_ID')
+
+Auto retry on number of API calls exceeded.
+This SDK in such case by default automatically waits until next call will be possible. If you prefer to raise an exception instead follow this example.
+
+.. code-block:: python
+
+    from postmen import Rates
+    rates = Rates('API_KEY', 'REGION', rate = False)
+    result = rates.retrieve('RATE_ID')
+
+Automatically retry if exception is retryable.
+
+.. code-block:: python
+
+    from postmen import Rates
+    rates = Rates('API_KEY', 'REGION', retry = True)
+    result = rates.retrieve('RATE_ID')
