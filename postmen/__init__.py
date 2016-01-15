@@ -20,7 +20,6 @@ else:
 
 __author__ = 'Postmen <support@postmen.com>'
 
-
 class PostmenError(Exception):
     """Include errors reported by API, related to API (e.g. rate limit) and other exceptions during API calls (e.g. HTTP connectivity issue)."""
     def __init__(self, message=None, **kwarg):
@@ -106,7 +105,7 @@ class API(object):
     """
     def __init__(
         self, api_key, region=None, endpoint=None, version='v3', x_agent='python-sdk-0.4',
-        retries=4, raw=False, safe=False, time=False, proxy=None, retry=True
+        retries=4, raw=False, safe=False, time=False, proxy=None, retry=True, rate = True
     ):
         if not api_key:
             raise PostmenError(message='missed API key')
@@ -128,6 +127,7 @@ class API(object):
         self._time = time
         self._proxy = {'https': proxy} if proxy else {}
         self._retry = retry
+        self._rate = rate
 
     def _delay(self, sec):
         time_module.sleep(sec)
@@ -150,6 +150,7 @@ class API(object):
 
         sec_before_reset = response.headers.get('x-ratelimit-reset', None)
         sec_before_reset = int(sec_before_reset) / 1000
+        #print sec_before_reset
         if sec_before_reset:
             if not self._time_before_reset or self._time_before_reset < sec_before_reset:
                 self._time_before_reset = int(sec_before_reset)
@@ -213,8 +214,11 @@ class API(object):
             # print 'int(time_module.time())', int(time_module.time())
             delta = self._time_before_reset - int(time_module.time())
             if delta > 0:
-                # print 'apply delay', delta
-                self._delay(delta)
+                if not self._rate:
+                    raise PostmenError(message = 'You have exceeded the API call rate limit. Please retry again at X-RateLimit-Reset header timestamp', code = 429, retryable = True)
+                else :
+                    # print 'apply delay', delta
+                    self._delay(delta)
 
     def _call_ones(self, method, path, body, query, raw, time, proxy):
         self._error = None
@@ -369,6 +373,45 @@ class API(object):
         """
         return self.POST('%s/%s/cancel' % (resource, str(id_)), '{"async":false}', **kwargs)
 
+class Rates(API):
+    def __init__(self, *args, **kwargs):
+        super(Rates, self).__init__(*args, **kwargs)
+    def calculate(self, query, **kwargs) :
+        print query
+    def list_all(self, **kwargs) :
+        return self.get('rates', None, **kwargs)
+    def retrieve(self, id, **kwargs) :
+        return self.get('rates', id, **kwargs)
+
+class Labels(API):
+    def __init__(self, *args, **kwargs):
+        super(Labels, self).__init__(*args, **kwargs)
+    def create(self, body, **kwargs) :
+        return self.POST('/v3/labels', body, **kwargs)
+    def list_all(self, **kwargs) :
+        return self.get('labels', None, **kwargs)
+    def retrieve(self, id, **kwargs) :
+        return self.get('labels', id, **kwargs)
+
+class Manifests(API):
+    def __init__(self, *args, **kwargs):
+        super(Manifests, self).__init__(*args, **kwargs)
+    def create(self, query, **kwargs) :
+        print query
+    def list_all(self, **kwargs) :
+        print "list all"
+    def retrieve(self, id, **kwargs) :
+        print id
+
+class CancelLabels(API):
+    def __init__(self, *args, **kwargs):
+        super(CancelLabels, self).__init__(*args, **kwargs)
+    def cancel(self, query, **kwargs) :
+        print query
+    def list_all(self, **kwargs) :
+        print "list all"
+    def retrieve(self, id, **kwargs) :
+        print id
 
 if __name__ == "__main__":
     print("Smoke test")
