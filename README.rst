@@ -153,7 +153,7 @@ Crate a label
                 'quantity': 2,
                 'sku': 'Epic_Food_Bar',
                 'weight': {
-                    'unit': u'kg',
+                    'unit': 'kg',
                     'value': 0.6
                 }
             }
@@ -236,6 +236,17 @@ Manifests
 ---------
 
 Create a manifest
+
+.. code-block:: python
+
+    from postmen import Manifests
+    manifests = Manifests('API_KEY', 'REGION')
+    query = {
+        'shipper_account': {
+            'id': '00000000-0000-0000-0000-000000000000'
+        }
+    }
+    result = manifests.create(query)
 
 List all manifests
 
