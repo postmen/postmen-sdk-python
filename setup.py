@@ -71,7 +71,7 @@ setup(
         'requests==2.7.0',
         'python-dateutil==2.4.2',
         'six==1.9.0',
-        'requests-mock==0.7.0'
+        'responses==0.5.1'
     ],
     tests_require=[
         'pytest'
