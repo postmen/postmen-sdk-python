@@ -64,9 +64,16 @@ setup(
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
     packages=['postmen'],
+    setup_requires=[
+        'pytest-runner'
+    ],
     install_requires=[
         'requests==2.7.0',
         'python-dateutil==2.4.2',
         'six==1.9.0'
+    ],
+    tests_require=[
+        'requests-mock==0.7.0',
+        'pytest'
     ]
 )
