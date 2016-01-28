@@ -72,7 +72,6 @@ def testRetryDelay():
         global call
         if call == 0 :
             call = 1
-            print "first attempt"
             return (200, headers,  '{"meta":{"code":999,"message":"PROBLEM","retryable":true, "details":[]},"data":{}}')
         elif call == 1 :
             call = 2
