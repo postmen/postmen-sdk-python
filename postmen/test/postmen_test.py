@@ -1,56 +1,208 @@
 import pytest
-
+import traceback
 import responses
 import requests
+import time
 
 from postmen import PostmenError
 from postmen import API
+from postmen import FakeAPI
+from postmen import PostmenError
 
-headers  = "Date: Fri, 22 Jan 2016 04:05:30 GMT\r\n"
-headers += "X-RateLimit-Limit: 10\r\n"
-headers += "X-RateLimit-Remaining: 10\r\n"
-headers += "X-RateLimit-Reset: 1453435538946\r\n"
-
-headers_exceeded  = "Date: Fri, 22 Jan 2016 04:05:30 GMT\r\n"
-headers_exceeded += "X-RateLimit-Limit: 10\r\n"
-headers_exceeded += "X-RateLimit-Remaining: 0\r\n"
-headers_exceeded += "X-RateLimit-Reset: 1453435538946\r\n"
-
-headers_length = len(headers)
-headers_length_exceeded = len(headers_exceeded)
+headers = {"x-ratelimit-reset": "1453435538946", "x-ratelimit-remaining": "10", "x-ratelimit-limit": "10"}
+exceeded = {"x-ratelimit-reset": "1453435538946", "x-ratelimit-remaining": "0", "x-ratelimit-limit": "10"}
 
 global call
 
+# expects not to raise any exceptions as meta code == 200
 @responses.activate
-def testRaiseException() :
+def testNotRaiseException() :
     response = '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}'
-    head = {"x-ratelimit-reset": "1453435538946"}
-    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=head, body=response, status=200)
+    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
     api = API('KEY', 'REGION')
     api.get('labels')
-    print "todo"
+    responses.reset()
+
+# note : to simulate equiv of curl error just remove
+# @responses.activate
+
+# expects to raise an exception if response from the API is not
+# a valid JSON encoded objecr in a string
+@responses.activate
 def testNonSerializableJSON():
-    print "todo"
+    response = 'THIS IS NOT A VALID JSON OBJECT'
+    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200, content_type='text/plain')
+    api = API('KEY', 'REGION')
+    with pytest.raises(PostmenError) as e:
+        api.get('labels')
+    responses.reset()
+    assert "Something went wrong on Postmen's end" in str(e.value)
+
+# expects not to raise the exception in safe mode but make it
+# accessibla via getError() method
+@responses.activate
 def testSafeModeEnabled():
-    print "todo"
+    response = 'THIS IS NOT A VALID JSON OBJECT, BUT EXCEPTION IS NOT GOING TO BE RAISED'
+    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200, content_type='text/plain')
+    api = API('KEY', 'REGION')
+    api.get('labels', safe=True)
+    responses.reset()
+    e = api.getError()
+    assert "Something went wrong on Postmen's end" in str(e.message())
+
+# expected to raise an exception if meta code different
+# than 200
+@responses.activate
 def testRaiseExceeded():
-    print "todo"
+    response = '{"meta":{"code":999,"message":"PROBLEM","details":[]},"data":{}}'
+    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
+    api = API('KEY', 'REGION')
+    with pytest.raises(PostmenError) as e:
+        api.get('labels')
+    responses.reset()
+    assert "PROBLEM (999)" in str(e.value)
+
+# checks if there will be 3 seconds delay if retryable error
+# occurs, tests if delay increments correctly
+@responses.activate
 def testRetryDelay():
-    print "todo"
-def testRetryMaxAttempt():
-    print "todo"
-def testRetryMaxAttemptExceeded():
-    print "todo"
-def testRetryPostmen():
-    print "todo"
-def testNotRetryPostmen():
-    print "todo"
+    global call
+    call = 0
+    def request_callback(request):
+        global call
+        if call == 0 :
+            call = 1
+            print "first attempt"
+            return (200, headers,  '{"meta":{"code":999,"message":"PROBLEM","retryable":true, "details":[]},"data":{}}')
+        elif call == 1 :
+            call = 2
+            "second attempt"
+            return (200, headers,  '{"meta":{"code":999,"message":"PROBLEM","retryable":true,"details":[]},"data":{}}')
+        elif call == 2 :
+            call = 3
+            return (200, headers,  '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}')
+    responses.add_callback(responses.GET, 'https://REGION-api.postmen.com/v3/labels', callback=request_callback)
+    api = API('KEY', 'REGION')
+    api.get('labels')
+    responses.reset()
+
+# expects not to fail if we etry four times
+@responses.activate
+def testRetryMaxAttempt(monkeypatch):
+    monkeypatch.setattr(time, 'sleep', lambda s: None)
+    global call
+    call = 0
+    def request_callback(request):
+        global call
+        if call < 4 :
+            call += 1
+            return (200, headers,  '{"meta":{"code":999,"message":"PROBLEM","retryable":true, "details":[]},"data":{}}')
+        else :
+            return (200, headers,  '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}')
+    responses.add_callback(responses.GET, 'https://REGION-api.postmen.com/v3/labels', callback=request_callback)
+    api = API('KEY', 'REGION')
+    before = time.time()
+    api.get('labels')
+    after = time.time()
+    responses.reset()
+    monkeypatch.setattr(time, 'sleep', lambda s: None)
+
+# expects to raise an exception because of too many retries
+@responses.activate
+def testRetryMaxAttemptExceeded(monkeypatch):
+    monkeypatch.setattr(time, 'sleep', lambda s: None)
+    response = '{"meta":{"code":999,"message":"PROBLEM","retryable":true, "details":[]},"data":{}}'
+    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
+    api = API('KEY', 'REGION')
+    with pytest.raises(PostmenError) as e:
+        api.get('labels')
+    responses.reset()
+    assert "PROBLEM (999)" in str(e.value)
+    monkeypatch.setattr(time, 'sleep', lambda s: None)
+
+# expects not to retry since postmen will return a non
+# retryable error
+@responses.activate
+def testNotRetryPostmen(monkeypatch):
+    monkeypatch.setattr(time, 'sleep', lambda s: None)
+    global call
+    call = 0
+    def request_callback(request):
+        global call
+        if call == 0 :
+            call = 1
+            return (200, headers,  '{"meta":{"code":999,"message":"PROBLEM","retryable":false, "details":[]},"data":{}}')
+        elif call == 1 :
+            return (200, headers,  '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}')
+    responses.add_callback(responses.GET, 'https://REGION-api.postmen.com/v3/labels', callback=request_callback)
+    api = API('KEY', 'REGION')
+    with pytest.raises(PostmenError) as e:
+        api.get('labels')
+    responses.reset()
+    #print e
+    assert "PROBLEM (999)" in str(e.value)
+    monkeypatch.setattr(time, 'sleep', lambda s: None)
+
+# expected to raise an exception
+@responses.activate
 def testRateLimitExceeded():
-    print "todo"
-def testRateLimit():
-    print "todo"
+    response = '{"meta":{"code":429,"message":"EXCEEDED","retryable":false, "details":[]},"data":{}}'
+    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=exceeded, body=response, status=200)
+    api = API('KEY', 'REGION')
+    with pytest.raises(PostmenError) as e:
+        api.get('labels')
+    responses.reset()
+    assert "EXCEEDED (429)" in str(e.value)
+
+# expected not to raise an exception
+# wait instead
+@responses.activate
+def testRateLimit(monkeypatch):
+    monkeypatch.setattr(time, 'sleep', lambda s: None)
+    global call
+    call = 0
+    def request_callback(request):
+        global call
+        if call == 0 :
+            call = 1
+            return (200, exceeded,  '{"meta":{"code":429,"message":"EXCEEDED","retryable":true, "details":[]},"data":{}}')
+        elif call == 1 :
+            return (200, headers,  '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}')
+    responses.add_callback(responses.GET, 'https://REGION-api.postmen.com/v3/labels', callback=request_callback)
+    api = API('KEY', 'REGION')
+    api.get('labels')
+    responses.reset()
+    monkeypatch.setattr(time, 'sleep', lambda s: None)
+
+# test if method and other parameters are correct
 def testWrappers():
-    print "todo"
+    api = FakeAPI('KEY', 'REGION')
+    ret = api.get('resource')
+    assert ret['method'] == 'GET'
+    assert ret['path'] == 'resource'
+    ret = api.get('resource', 1234567890)
+    assert ret['method'] == 'GET'
+    assert ret['path'] == 'resource/1234567890'
+    payload = {'something': 'value'}
+    ret = api.create('resource', payload)
+    assert ret['method'] == 'POST'
+    assert ret['path'] == 'resource'
+    assert ret['body']['something'] == 'value'
+    body = 'THIS IS REQUEST BODY'
+    ret = api.GET('resource')
+    assert ret['method'] == 'GET'
+    assert ret['path'] == 'resource'
+    ret = api.POST('resource', body)
+    assert ret['method'] == 'POST'
+    assert ret['path'] == 'resource'
+    assert ret['body'] == 'THIS IS REQUEST BODY'
+    ret = api.PUT('resource', body)
+    assert ret['method'] == 'PUT'
+    assert ret['path'] == 'resource'
+    assert ret['body'] == 'THIS IS REQUEST BODY'
+    ret = api.DELETE('resource')
+    assert ret['method'] == 'DELETE'
+    assert ret['path'] == 'resource'
 
 '''
 # example how to achieve same behaviour as ->at($index) in

@@ -35,6 +35,7 @@ class PostmenError(Exception):
         self._setDefault('retryable', False)
         self._setDefault('message', 'no details')
 
+
     def __str__(self):
         msg = self.message()+((' (%s)' % str(self.code())) if self.code() else "")
         return msg
@@ -105,7 +106,7 @@ class API(object):
     """
     def __init__(
         self, api_key, region=None, endpoint=None, version='v3', x_agent='python-sdk-0.4',
-        retries=4, raw=False, safe=False, time=False, proxy=None, retry=True, rate = True
+        retries=5, raw=False, safe=False, time=False, proxy=None, retry=True, rate = True
     ):
         if not api_key:
             raise PostmenError(message='missed API key')
@@ -167,7 +168,12 @@ class API(object):
                 ret = response.text
             else:
                 kls = JSONWithDatetimeDecoder if time else json.JSONDecoder
-                ret = json.loads(response.text, cls=kls)
+                try :
+                    ret = json.loads(response.text, cls=kls)
+                except ValueError as e :
+                    error_code = 500
+                    error_message = "Something went wrong on Postmen's end"
+                    raise PostmenError(message = error_message, code = error_code, retryable = False)
                 meta_code = ret.get('meta', {}).get('code', None)
                 # print ret
                 if not meta_code:
@@ -372,6 +378,40 @@ class API(object):
         :returns: same as API.call()
         """
         return self.POST('%s/%s/cancel' % (resource, str(id_)), '{"async":false}', **kwargs)
+
+class FakeAPI(API):
+    def __init__(self, *args, **kwargs):
+        super(FakeAPI, self).__init__(*args, **kwargs)
+
+    def _call_ones(self, method, path, body, query, raw, time, proxy):
+        return {'method': method, 'path': path, 'body': body, 'query' : query, 'raw' : raw, 'time': time, 'proxy': proxy}
+
+    def call(
+        self, method, path, body,
+        query=None, raw=None, safe=None, time=None, proxy=None, retry=None
+    ):
+        return super(FakeAPI, self).call(method, path, body, query, raw, safe, time, proxy, retry)
+
+    def GET(self, path, **kwargs):
+        return super(FakeAPI, self).GET(path, **kwargs)
+
+    def POST(self, path, body, **kwargs):
+        return super(FakeAPI, self).POST(path, body, **kwargs)
+
+    def PUT(self, path, body, **kwargs):
+        return super(FakeAPI, self).PUT(path, body, **kwargs)
+
+    def DELETE(self, path, **kwargs):
+        return super(FakeAPI, self).DELETE(path, **kwargs)
+
+    def get(self, resource, id_=None, **kwargs):
+        return super(FakeAPI, self).get(resource, id_, **kwargs)
+
+    def create(self, resource, payload, **kwargs):
+        return super(FakeAPI, self).create(resource, payload, **kwargs)
+
+    def cancel(self, resource, id_, **kwargs):
+        return super(FakeAPI, self).cancel(resource, id_, **kwargs)
 
 class Rates(API):
     def __init__(self, *args, **kwargs):
