@@ -14,9 +14,9 @@ import requests
 from .jsont import JSONWithDatetimeEncoder
 from .jsont import JSONWithDatetimeDecoder
 if six.PY2:
-    from rp2 import _raise
+    from .rp2 import _raise
 else:
-    from rp3 import _raise
+    from .rp3 import _raise
 
 __author__ = 'Postmen <support@postmen.com>'
 
