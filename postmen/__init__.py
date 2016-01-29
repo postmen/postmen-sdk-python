@@ -11,8 +11,8 @@ import threading
 import six
 import requests
 
-from postmen.jsont import JSONWithDatetimeEncoder
-from postmen.jsont import JSONWithDatetimeDecoder
+from .jsont import JSONWithDatetimeEncoder
+from .jsont import JSONWithDatetimeDecoder
 if six.PY2:
     from rp2 import _raise
 else:
