@@ -9,9 +9,9 @@ if label is None:
 try:
     api = Postmen(key, region)
     # get all the cancelled labels
-    result_all = api.create('labels')
+    result_all = api.get('labels')
     # get a particular cancelled label
-    result_particular = api.create('labels', label)
+    result_particular = api.get('labels', label)
     print "RESULT"
     print result_all
     print result_particular

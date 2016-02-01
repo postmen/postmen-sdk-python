@@ -9,9 +9,9 @@ if rate is None:
 try:
     api = Postmen(key, region)
     # get all rates
-    result_all = api.create('rates')
+    result_all = api.get('rates')
     # get a particular rate
-    result_particular = api.create('rates', rate)
+    result_particular = api.get('rates', rate)
     print "RESULT"
     print result_all
     print result_particular

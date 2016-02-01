@@ -9,9 +9,9 @@ if manifest is None:
 try:
     api = Postmen(key, region)
     # get all manifests
-    result_all = api.create('manifests')
+    result_all = api.get('manifests')
     # get a particular manifest
-    result_particular = api.create('manifests', manifest)
+    result_particular = api.get('manifests', manifest)
     print "RESULT"
     print result_all
     print result_particular
