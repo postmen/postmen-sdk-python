@@ -4,13 +4,13 @@ import responses
 import requests
 import time
 
-from postmen import PostmenError
-from postmen import API
-from postmen import FakeAPI
-from postmen import PostmenError
+from postmen import Postmen
+from postmen import FakePostmen
+from postmen import PostmenException
 
 headers = {"x-ratelimit-reset": "1453435538946", "x-ratelimit-remaining": "10", "x-ratelimit-limit": "10"}
 exceeded = {"x-ratelimit-reset": "1453435538946", "x-ratelimit-remaining": "0", "x-ratelimit-limit": "10"}
+incorrect= {}
 
 global call
 
@@ -19,7 +19,7 @@ global call
 def testNotRaiseException() :
     response = '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}'
     responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
-    api = API('KEY', 'REGION')
+    api = Postmen('KEY', 'REGION')
     api.get('labels')
     responses.reset()
 
@@ -32,8 +32,8 @@ def testNotRaiseException() :
 def testNonSerializableJSON():
     response = 'THIS IS NOT A VALID JSON OBJECT'
     responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200, content_type='text/plain')
-    api = API('KEY', 'REGION')
-    with pytest.raises(PostmenError) as e:
+    api = Postmen('KEY', 'REGION')
+    with pytest.raises(PostmenException) as e:
         api.get('labels')
     responses.reset()
     assert "Something went wrong on Postmen's end" in str(e.value)
@@ -44,7 +44,7 @@ def testNonSerializableJSON():
 def testSafeModeEnabled():
     response = 'THIS IS NOT A VALID JSON OBJECT, BUT EXCEPTION IS NOT GOING TO BE RAISED'
     responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200, content_type='text/plain')
-    api = API('KEY', 'REGION')
+    api = Postmen('KEY', 'REGION')
     api.get('labels', safe=True)
     responses.reset()
     e = api.getError()
@@ -56,8 +56,8 @@ def testSafeModeEnabled():
 def testRaiseExceeded():
     response = '{"meta":{"code":999,"message":"PROBLEM","details":[]},"data":{}}'
     responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
-    api = API('KEY', 'REGION')
-    with pytest.raises(PostmenError) as e:
+    api = Postmen('KEY', 'REGION')
+    with pytest.raises(PostmenException) as e:
         api.get('labels')
     responses.reset()
     assert "PROBLEM (999)" in str(e.value)
@@ -81,7 +81,7 @@ def testRetryDelay():
             call = 3
             return (200, headers,  '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}')
     responses.add_callback(responses.GET, 'https://REGION-api.postmen.com/v3/labels', callback=request_callback)
-    api = API('KEY', 'REGION')
+    api = Postmen('KEY', 'REGION')
     api.get('labels')
     responses.reset()
 
@@ -99,7 +99,7 @@ def testRetryMaxAttempt(monkeypatch):
         else :
             return (200, headers,  '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}')
     responses.add_callback(responses.GET, 'https://REGION-api.postmen.com/v3/labels', callback=request_callback)
-    api = API('KEY', 'REGION')
+    api = Postmen('KEY', 'REGION')
     before = time.time()
     api.get('labels')
     after = time.time()
@@ -112,8 +112,8 @@ def testRetryMaxAttemptExceeded(monkeypatch):
     monkeypatch.setattr(time, 'sleep', lambda s: None)
     response = '{"meta":{"code":999,"message":"PROBLEM","retryable":true, "details":[]},"data":{}}'
     responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
-    api = API('KEY', 'REGION')
-    with pytest.raises(PostmenError) as e:
+    api = Postmen('KEY', 'REGION')
+    with pytest.raises(PostmenException) as e:
         api.get('labels')
     responses.reset()
     assert "PROBLEM (999)" in str(e.value)
@@ -134,8 +134,8 @@ def testNotRetryPostmen(monkeypatch):
         elif call == 1 :
             return (200, headers,  '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}')
     responses.add_callback(responses.GET, 'https://REGION-api.postmen.com/v3/labels', callback=request_callback)
-    api = API('KEY', 'REGION')
-    with pytest.raises(PostmenError) as e:
+    api = Postmen('KEY', 'REGION')
+    with pytest.raises(PostmenException) as e:
         api.get('labels')
     responses.reset()
     #print e
@@ -147,8 +147,8 @@ def testNotRetryPostmen(monkeypatch):
 def testRateLimitExceeded():
     response = '{"meta":{"code":429,"message":"EXCEEDED","retryable":false, "details":[]},"data":{}}'
     responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=exceeded, body=response, status=200)
-    api = API('KEY', 'REGION')
-    with pytest.raises(PostmenError) as e:
+    api = Postmen('KEY', 'REGION')
+    with pytest.raises(PostmenException) as e:
         api.get('labels')
     responses.reset()
     assert "EXCEEDED (429)" in str(e.value)
@@ -168,14 +168,14 @@ def testRateLimit(monkeypatch):
         elif call == 1 :
             return (200, headers,  '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}')
     responses.add_callback(responses.GET, 'https://REGION-api.postmen.com/v3/labels', callback=request_callback)
-    api = API('KEY', 'REGION')
+    api = Postmen('KEY', 'REGION')
     api.get('labels')
     responses.reset()
     monkeypatch.setattr(time, 'sleep', lambda s: None)
 
 # test if method and other parameters are correct
 def testWrappers():
-    api = FakeAPI('KEY', 'REGION')
+    api = FakePostmen('KEY', 'REGION')
     ret = api.get('resource')
     assert ret['method'] == 'GET'
     assert ret['path'] == 'resource'
@@ -202,6 +202,17 @@ def testWrappers():
     ret = api.DELETE('resource')
     assert ret['method'] == 'DELETE'
     assert ret['path'] == 'resource'
+
+# expected not to raise any exceptions if x-ratelimit-reset
+# header is not present
+@responses.activate
+def testIncorrectResponseHeaders():
+    response = '{"meta":{"code":200,"message":"OK","details":[]},"data":{"key":"value"}}'
+    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=incorrect, body=response, status=200)
+    api = Postmen('KEY', 'REGION')
+    ret = api.get('labels')
+    assert ret['key'] == 'value'
+    responses.reset()
 
 '''
 # example how to achieve same behaviour as ->at($index) in

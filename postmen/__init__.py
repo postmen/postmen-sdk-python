@@ -1,4 +1,4 @@
-"""API and PostmenError classes are intended for SDK users.
+"""Postmen and PostmenException classes are intended for SDK users.
 """
 
 import sys
@@ -20,7 +20,7 @@ else:
 
 __author__ = 'Postmen <support@postmen.com>'
 
-class PostmenError(Exception):
+class PostmenException(Exception):
     """Include errors reported by API, related to API (e.g. rate limit) and other exceptions during API calls (e.g. HTTP connectivity issue)."""
     def __init__(self, message=None, **kwarg):
         self.a = kwarg
@@ -74,8 +74,8 @@ class PostmenError(Exception):
         :rtype: dict"""
         return self.a['data']
 
-class API(object):
-    """API calls handler.
+class Postmen(object):
+    """Postmen calls handler.
 
     :param api_key: Postmen API key
     :type api_key: str or unicode
@@ -96,24 +96,25 @@ class API(object):
     :param time: True to convert ISO time strings to datetime.datetime
     :type time: bool
     :param proxy: Proxy for HTTP calls
-    :type proxy: str or unicode
+    :type proxy: dictionary like in http://docs.python-requests.org/en/latest/user/advanced/#proxies
     :param retry: True to retry calls in case of retriable errors
     :type retry: bool
     
-    :raises PostmenError: if API is missed
-    :raises PostmenError: if region or endpoint is missed
-    :raises PostmenError: if version is missed
+    :raises PostmenException: if API is missed
+    :raises PostmenException: if region or endpoint is missed
+    :raises PostmenException: if version is missed
     """
     def __init__(
-        self, api_key, region=None, endpoint=None, version='v3', x_agent='python-sdk-0.4',
-        retries=5, raw=False, safe=False, time=False, proxy=None, retry=True, rate = True
+        self, api_key, region=None, endpoint=None, version='v3', x_agent='python-sdk-0.5',
+        retries=5, raw=False, safe=False, time=False, proxy={}, retry=True, rate = True
     ):
+        e = None
         if not api_key:
-            raise PostmenError(message='missed API key')
+            e = PostmenException(message='missed API key')
         if not region and not endpoint:
-            raise PostmenError(message='missed region')
+            e = PostmenException(message='missed region')
         if not version:
-            raise PostmenError(message='missed API version')
+            e = PostmenException(message='missed API version')
         self._retries = retries
         self._error = None
         self._version = version
@@ -126,20 +127,22 @@ class API(object):
         self._raw = raw
         self._safe = safe
         self._time = time
-        self._proxy = {'https': proxy} if proxy else {}
+        self._proxy = proxy
         self._retry = retry
         self._rate = rate
+        if e is not None :
+            self._report_error(e, self._safe)
 
     def _delay(self, sec):
         time_module.sleep(sec)
 
     def _report_error(self, e, safe):
         type, value, traceback = sys.exc_info()
-        kwargs = e.a if isinstance(e, PostmenError) else {'meta': {'message': str(e)}}
+        kwargs = e.a if isinstance(e, PostmenException) else {'meta': {'message': str(e)}}
         if 'meta' not in kwargs:
             kwargs['meta'] = {}
         kwargs['meta']['traceback'] = traceback
-        pe = PostmenError(**kwargs)
+        pe = PostmenException(**kwargs)
         if safe:
             self._error = pe
             return None
@@ -149,7 +152,7 @@ class API(object):
         # print response.headers
         # print response.text
 
-        sec_before_reset = response.headers.get('x-ratelimit-reset', None)
+        sec_before_reset = response.headers.get('x-ratelimit-reset', '0')
         sec_before_reset = int(sec_before_reset) / 1000
         #print sec_before_reset
         if sec_before_reset:
@@ -173,20 +176,20 @@ class API(object):
                 except ValueError as e :
                     error_code = 500
                     error_message = "Something went wrong on Postmen's end"
-                    raise PostmenError(message = error_message, code = error_code, retryable = False)
+                    raise PostmenException(message = error_message, code = error_code, retryable = False)
                 meta_code = ret.get('meta', {}).get('code', None)
                 # print ret
                 if not meta_code:
-                    raise PostmenError(message='API response missed meta info', **ret)
+                    raise PostmenException(message='API response missed meta info', **ret)
                 if int(meta_code) != 200 and int(meta_code / 1000) != 3:
-                    raise PostmenError(**ret)
+                    raise PostmenException(**ret)
                 if 'data' not in ret:
-                    raise PostmenError(message='no data returned by API server', **ret)
+                    raise PostmenException(message='no data returned by API server', **ret)
                 ret = ret['data']
         else:
-            raise PostmenError(message='no response from API server')
+            raise PostmenException(message='no response from API server')
         if not response.ok:
-            raise PostmenError(message='HTTP code = %d' % response.status_code)
+            raise PostmenException(message='HTTP code = %d' % response.status_code)
         return ret
 
     def _get_requests_params(self, method, path, body, query, proxy):
@@ -221,7 +224,7 @@ class API(object):
             delta = self._time_before_reset - int(time_module.time())
             if delta > 0:
                 if not self._rate:
-                    raise PostmenError(message = 'You have exceeded the API call rate limit. Please retry again at X-RateLimit-Reset header timestamp', code = 429, retryable = True)
+                    raise PostmenException(message = 'You have exceeded the API call rate limit. Please retry again at X-RateLimit-Reset header timestamp', code = 429, retryable = True)
                 else :
                     # print 'apply delay', delta
                     self._delay(delta)
@@ -235,7 +238,7 @@ class API(object):
 
     def call(
         self, method, path, body,
-        query=None, raw=None, safe=None, time=None, proxy=None, retry=None
+        query=None, raw=None, safe=None, time=None, proxy={}, retry=None
     ):
         """Create, perform HTTP call to Postmen API, parse and return result.
 
@@ -254,24 +257,20 @@ class API(object):
         :param time: True to convert ISO time strings to datetime.datetime (overwrite constructor value)
         :type time: bool
         :param proxy: Proxy for HTTP calls (overwrite constructor value)
-        :type proxy: str or unicode
+        :type proxy: dictionary like http://docs.python-requests.org/en/latest/user/advanced/#proxies
         :param retry: True to retry calls in case of retriable errors (overwrite constructor value)
         :type retry: bool
         
         :returns: API data response
         :rtype: dict or list or str or unicode
         
-        :raises PostmenError: all errors and exceptions
+        :raises PostmenException: all errors and exceptions
         """
         retry = self._retry if retry==None else retry
         raw   = self._raw   if raw==None   else raw
         safe  = self._safe  if safe==None  else safe
         time  = self._time  if time==None  else time
-        if proxy == False:
-            proxy = {}
-        elif isinstance(proxy, six.string_types):
-            proxy = {'https': proxy}
-        else:
+        if proxy == {}:
             proxy = self._proxy
         tries = self._retries if retry else 1
         count = 0
@@ -279,7 +278,7 @@ class API(object):
         while True:
             try:
                 return self._call_ones(method, path, body, query, raw, time, proxy)
-            except PostmenError as e:
+            except PostmenException as e:
                 if not e.retryable():
                     return self._report_error(e, safe)
                 count = count + 1
@@ -291,7 +290,7 @@ class API(object):
                 return self._report_error(e, safe)
 
     def getError(self):
-        """If safe == True, return last PostmenError"""
+        """If safe == True, return last PostmenException"""
         return self._error
 
     def GET(self, path, **kwargs):
@@ -299,9 +298,9 @@ class API(object):
         
         :param path: URL path
         :type path: str or unicode
-        :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()
+        :param **kwargs: query, raw, safe, time, proxy, retry params from Postmen.call()
         
-        :returns: same as API.call()
+        :returns: same as Postmen.call()
         """
         return self.call('GET', path, None, **kwargs)
 
@@ -312,9 +311,9 @@ class API(object):
         :type path: str or unicode
         :param body: API call payload
         :type body: dict or list or str or unicode
-        :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()
+        :param **kwargs: query, raw, safe, time, proxy, retry params from Postmen.call()
         
-        :returns: same as API.call()
+        :returns: same as Postmen.call()
         """
         return self.call('POST', path, body, **kwargs)
 
@@ -325,9 +324,9 @@ class API(object):
         :type path: str or unicode
         :param body: API call payload
         :type body: dict or list or str or unicode
-        :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()
+        :param **kwargs: query, raw, safe, time, proxy, retry params from Postmen.call()
         
-        :returns: same as API.call()
+        :returns: same as Postmen.call()
         """
         return self.call('PUT', path, body, **kwargs)
 
@@ -336,9 +335,9 @@ class API(object):
         
         :param path: URL path
         :type path: str or unicode
-        :param **kwargs: query, raw, safe, time, proxy, retry params from API.call()
+        :param **kwargs: query, raw, safe, time, proxy, retry params from Postmen.call()
         
-        :returns: same as API.call()
+        :returns: same as Postmen.call()
         """
         return self.call('DELETE', path, None, **kwargs)
 
@@ -350,7 +349,7 @@ class API(object):
         :param id_: resource id, None to list all resources
         :type id_: str or unicode
         
-        :returns: same as API.call()
+        :returns: same as Postmen.call()
         """
         method = '%s/%s' % (resource, str(id_)) if id_ else resource
         return self.GET(method, **kwargs)
@@ -363,25 +362,13 @@ class API(object):
         :param payload: API call payload
         :type payload: dict or list or str or unicode
         
-        :returns: same as API.call()
+        :returns: same as Postmen.call()
         """
         return self.POST(resource, payload, **kwargs)
 
-    def cancel(self, resource, id_, **kwargs):
-        """Delete/cancel particular resource (e.g. label)
-        
-        :param resource: resource type (e.g. labels)
-        :type resource: str or unicode
-        :param id_: resource id
-        :type id_: str or unicode
-        
-        :returns: same as API.call()
-        """
-        return self.POST('%s/%s/cancel' % (resource, str(id_)), '{"async":false}', **kwargs)
-
-class FakeAPI(API):
+class FakePostmen(Postmen):
     def __init__(self, *args, **kwargs):
-        super(FakeAPI, self).__init__(*args, **kwargs)
+        super(FakePostmen, self).__init__(*args, **kwargs)
 
     def _call_ones(self, method, path, body, query, raw, time, proxy):
         return {'method': method, 'path': path, 'body': body, 'query' : query, 'raw' : raw, 'time': time, 'proxy': proxy}
@@ -390,68 +377,25 @@ class FakeAPI(API):
         self, method, path, body,
         query=None, raw=None, safe=None, time=None, proxy=None, retry=None
     ):
-        return super(FakeAPI, self).call(method, path, body, query, raw, safe, time, proxy, retry)
+        return super(FakePostmen, self).call(method, path, body, query, raw, safe, time, proxy, retry)
 
     def GET(self, path, **kwargs):
-        return super(FakeAPI, self).GET(path, **kwargs)
+        return super(FakePostmen, self).GET(path, **kwargs)
 
     def POST(self, path, body, **kwargs):
-        return super(FakeAPI, self).POST(path, body, **kwargs)
+        return super(FakePostmen, self).POST(path, body, **kwargs)
 
     def PUT(self, path, body, **kwargs):
-        return super(FakeAPI, self).PUT(path, body, **kwargs)
+        return super(FakePostmen, self).PUT(path, body, **kwargs)
 
     def DELETE(self, path, **kwargs):
-        return super(FakeAPI, self).DELETE(path, **kwargs)
+        return super(FakePostmen, self).DELETE(path, **kwargs)
 
     def get(self, resource, id_=None, **kwargs):
-        return super(FakeAPI, self).get(resource, id_, **kwargs)
+        return super(FakePostmen, self).get(resource, id_, **kwargs)
 
     def create(self, resource, payload, **kwargs):
-        return super(FakeAPI, self).create(resource, payload, **kwargs)
-
-    def cancel(self, resource, id_, **kwargs):
-        return super(FakeAPI, self).cancel(resource, id_, **kwargs)
-
-class Rates(API):
-    def __init__(self, *args, **kwargs):
-        super(Rates, self).__init__(*args, **kwargs)
-    def calculate(self, query, **kwargs) :
-        return self.POST('rates', query, **kwargs)
-    def list_all(self, **kwargs) :
-        return self.get('rates', None, **kwargs)
-    def retrieve(self, id, **kwargs) :
-        return self.get('rates', id, **kwargs)
-
-class Labels(API):
-    def __init__(self, *args, **kwargs):
-        super(Labels, self).__init__(*args, **kwargs)
-    def create(self, body, **kwargs) :
-        return self.POST('labels', body, **kwargs)
-    def list_all(self, **kwargs) :
-        return self.get('labels', None, **kwargs)
-    def retrieve(self, id, **kwargs) :
-        return self.get('labels', id, **kwargs)
-
-class Manifests(API):
-    def __init__(self, *args, **kwargs):
-        super(Manifests, self).__init__(*args, **kwargs)
-    def create(self, query, **kwargs) :
-        return self.POST('manifests', body, **kwargs)
-    def list_all(self, _query, **kwargs) :
-        return self.get('manifests', None, query = _query, **kwargs)
-    def retrieve(self, id, **kwargs) :
-        return self.get('manifests', id, **kwargs)
-
-class CancelLabels(API):
-    def __init__(self, *args, **kwargs):
-        super(CancelLabels, self).__init__(*args, **kwargs)
-    def cancel(self, query, **kwargs) :
-        return self.POST('cancel-labels', body, **kwargs)
-    def list_all(self, _query, **kwargs) :
-        return self.get('labels', None, query = _query, **kwargs)
-    def retrieve(self, id, **kwargs) :
-        return self.get('cancel-labels', id, **kwargs)
+        return super(FakePostmen, self).create(resource, payload, **kwargs)
 
 if __name__ == "__main__":
     print("Smoke test")
@@ -516,7 +460,7 @@ if __name__ == "__main__":
             }]
         }
     }
-    postmen = API(api_key, region)
+    postmen = Postmen(api_key, region)
     result = postmen.get('labels')
     print('\nRESULT:')
     print(json.dumps(result, indent=4, cls=JSONWithDatetimeEncoder))
