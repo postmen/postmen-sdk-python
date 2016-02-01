@@ -105,7 +105,7 @@ class Postmen(object):
     :raises PostmenException: if version is missed
     """
     def __init__(
-        self, api_key, region=None, endpoint=None, version='v3', x_agent='python-sdk-0.5',
+        self, api_key, region=None, endpoint=None, version='v3', x_agent='python-sdk-0.6',
         retries=5, raw=False, safe=False, time=False, proxy={}, retry=True, rate = True
     ):
         e = None
@@ -148,7 +148,10 @@ class Postmen(object):
             return None
         _raise(pe, e, traceback)
 
-    def _response(self, response, raw, time):
+    def _response(self, response, **kwargs):
+        raw   = kwargs.get('raw', self._raw)
+        time  = kwargs.get('time', self._time)
+
         # print response.headers
         # print response.text
 
@@ -192,7 +195,11 @@ class Postmen(object):
             raise PostmenException(message='HTTP code = %d' % response.status_code)
         return ret
 
-    def _get_requests_params(self, method, path, body, query, proxy):
+    def _get_requests_params(self, method, path, **kwargs):
+        proxy = kwargs.get('proxy', self._proxy)
+        body  = kwargs.get('body', {})
+        query = kwargs.get('query', {})
+
         headers = self._headers
 
         url = six.moves.urllib.parse.urljoin(
@@ -229,55 +236,42 @@ class Postmen(object):
                     # print 'apply delay', delta
                     self._delay(delta)
 
-    def _call_ones(self, method, path, body, query, raw, time, proxy):
+    def _call_ones(self, method, path, **kwargs):
+        retry = kwargs.get('retry', self._retry)
+        raw   = kwargs.get('raw', self._raw)
+        safe  = kwargs.get('safe', self._safe)
+        time  = kwargs.get('time', self._time)
+        proxy = kwargs.get('proxy', self._proxy)
+        tries = kwargs.get('tries', self._retries)
+        body  = kwargs.get('body', {})
+        query = kwargs.get('query', {})
         self._error = None
-        params = self._get_requests_params(method, path, body, query, proxy)
+        params = self._get_requests_params(method, path, **kwargs)
         self._apply_rate_limit()
         response = requests.request(**params)
-        return self._response(response, raw, time)
+        return self._response(response, **kwargs)
 
-    def call(
-        self, method, path, body,
-        query=None, raw=None, safe=None, time=None, proxy={}, retry=None
-    ):
+    def call(self, method, path, **kwargs):
         """Create, perform HTTP call to Postmen API, parse and return result.
 
         :param method: HTTP method
         :type method: str or unicode
         :param path: URL path
         :type path: str or unicode
-        :param body: API call payload
-        :type body: dict or list or str or unicode
-        :param query: URL query
-        :type query: dict or str or unicode
-        :param raw: True to exclude parsing of response JSON strings (overwrite constructor value)
-        :type raw: bool
-        :param safe: True to suppress exceptions. Use getError() instead (overwrite constructor value)
-        :type safe: bool
-        :param time: True to convert ISO time strings to datetime.datetime (overwrite constructor value)
-        :type time: bool
-        :param proxy: Proxy for HTTP calls (overwrite constructor value)
-        :type proxy: dictionary like http://docs.python-requests.org/en/latest/user/advanced/#proxies
-        :param retry: True to retry calls in case of retriable errors (overwrite constructor value)
-        :type retry: bool
-        
+        :param **kwargs: query, body, raw, safe, time, proxy, retry params
+       
         :returns: API data response
         :rtype: dict or list or str or unicode
         
         :raises PostmenException: all errors and exceptions
         """
-        retry = self._retry if retry==None else retry
-        raw   = self._raw   if raw==None   else raw
-        safe  = self._safe  if safe==None  else safe
-        time  = self._time  if time==None  else time
-        if proxy == {}:
-            proxy = self._proxy
-        tries = self._retries if retry else 1
+        safe  = kwargs.get('safe', self._safe)
+        tries = kwargs.get('tries', self._retries)
         count = 0
         delay = 0
         while True:
             try:
-                return self._call_ones(method, path, body, query, raw, time, proxy)
+                return self._call_ones(method, path, **kwargs)
             except PostmenException as e:
                 if not e.retryable():
                     return self._report_error(e, safe)
@@ -302,33 +296,29 @@ class Postmen(object):
         
         :returns: same as Postmen.call()
         """
-        return self.call('GET', path, None, **kwargs)
+        return self.call('GET', path, **kwargs)
 
-    def POST(self, path, body, **kwargs):
+    def POST(self, path, **kwargs):
         """Create, perform HTTP POST call to Postmen API, parse and return result.
         
         :param path: URL path
         :type path: str or unicode
-        :param body: API call payload
-        :type body: dict or list or str or unicode
         :param **kwargs: query, raw, safe, time, proxy, retry params from Postmen.call()
         
         :returns: same as Postmen.call()
         """
-        return self.call('POST', path, body, **kwargs)
+        return self.call('POST', path, **kwargs)
 
-    def PUT(self, path, body, **kwargs):
+    def PUT(self, path, **kwargs):
         """Create, perform HTTP PUT call to Postmen API, parse and return result.
         
         :param path: URL path
         :type path: str or unicode
-        :param body: API call payload
-        :type body: dict or list or str or unicode
         :param **kwargs: query, raw, safe, time, proxy, retry params from Postmen.call()
         
         :returns: same as Postmen.call()
         """
-        return self.call('PUT', path, body, **kwargs)
+        return self.call('PUT', path, **kwargs)
 
     def DELETE(self, path, **kwargs):
         """Create, perform HTTP DELETE call to Postmen API, parse and return result.
@@ -339,7 +329,7 @@ class Postmen(object):
         
         :returns: same as Postmen.call()
         """
-        return self.call('DELETE', path, None, **kwargs)
+        return self.call('DELETE', path, **kwargs)
 
     def get(self, resource, id_=None, **kwargs):
         """List all or retrieve particular resource (e.g. /labels, /labels/:id)
@@ -365,113 +355,3 @@ class Postmen(object):
         :returns: same as Postmen.call()
         """
         return self.POST(resource, payload, **kwargs)
-
-class FakePostmen(Postmen):
-    def __init__(self, *args, **kwargs):
-        super(FakePostmen, self).__init__(*args, **kwargs)
-
-    def _call_ones(self, method, path, body, query, raw, time, proxy):
-        return {'method': method, 'path': path, 'body': body, 'query' : query, 'raw' : raw, 'time': time, 'proxy': proxy}
-
-    def call(
-        self, method, path, body,
-        query=None, raw=None, safe=None, time=None, proxy=None, retry=None
-    ):
-        return super(FakePostmen, self).call(method, path, body, query, raw, safe, time, proxy, retry)
-
-    def GET(self, path, **kwargs):
-        return super(FakePostmen, self).GET(path, **kwargs)
-
-    def POST(self, path, body, **kwargs):
-        return super(FakePostmen, self).POST(path, body, **kwargs)
-
-    def PUT(self, path, body, **kwargs):
-        return super(FakePostmen, self).PUT(path, body, **kwargs)
-
-    def DELETE(self, path, **kwargs):
-        return super(FakePostmen, self).DELETE(path, **kwargs)
-
-    def get(self, resource, id_=None, **kwargs):
-        return super(FakePostmen, self).get(resource, id_, **kwargs)
-
-    def create(self, resource, payload, **kwargs):
-        return super(FakePostmen, self).create(resource, payload, **kwargs)
-
-if __name__ == "__main__":
-    print("Smoke test")
-    region = 'sandbox'
-    api_key = 'API_KEY'
-    shipper_id = 'SHIPPER_ACCOUNT_ID'
-    payload = {
-        "async": False,
-        "shipper_accounts": [{
-            "id": shipper_id
-        }],
-        "is_document": False,
-        "shipment": {
-            "ship_from": {
-                "contact_name": "Jameson McLaughlin",
-                "company_name": "Bode, Lind and Powlowski",
-                "street1": "8918 Borer Ramp",
-                "city": "Los Angeles",
-                "state": "CA",
-                "postal_code": "90001",
-                "country": "USA",
-                "type": "business"
-            },
-            "ship_to": {
-                "contact_name": "Dr. Moises Corwin",
-                "phone": "1-140-225-6410",
-                "email": "Giovanna42@yahoo.com",
-                "street1": "28292 Daugherty Orchard",
-                "city": "Beverly Hills",
-                "postal_code": "90209",
-                "state": "CA",
-                "country": "USA",
-                "type": "residential"
-            },
-            "parcels": [{
-                "description": "iMac (Retina 5K, 27-inch, Late 2014)",
-                "box_type": "custom",
-                "weight": {
-                    "value": 9.54,
-                    "unit": "kg"
-                },
-                "dimension": {
-                    "width": 65,
-                    "height": 52,
-                    "depth": 21,
-                    "unit": "cm"
-                },
-                "items": [{
-                    "description": "iMac (Retina 5K, 27-inch, Late 2014)",
-                    "origin_country": "USA",
-                    "quantity": 1,
-                    "price": {
-                        "amount": 1999,
-                        "currency": "USD"
-                    },
-                    "weight": {
-                        "value": 9.54,
-                        "unit": "kg"
-                    },
-                    "sku": "imac2014"
-                }]
-            }]
-        }
-    }
-    postmen = Postmen(api_key, region)
-    result = postmen.get('labels')
-    print('\nRESULT:')
-    print(json.dumps(result, indent=4, cls=JSONWithDatetimeEncoder))
-    e = postmen.getError();
-    if e:
-        print('\nERROR:')
-        print('\t%s' % str(e))
-        print('\tcode: %s' % e.code())
-        print('\tmessage: %s' % e.message())
-        print('\tdetails: %s' % e.details())
-        print('\tretryable: %s' % e.retryable())
-        print('\tdata: %s' % e.data())
-        print('\ttraceback: %s\n' % e.traceback())
-        traceback.print_tb(e.traceback())
