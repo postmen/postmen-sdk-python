@@ -30,7 +30,8 @@ class PostmenException(Exception):
             self.a['data'] = None
         if message:
             self.a['meta']['message'] = message
-        self._setDefault('code', None)
+        code = kwarg.get('code', None)
+        self._setDefault('code', code)
         self._setDefault('details', [])
         self._setDefault('retryable', False)
         self._setDefault('message', 'no details')
@@ -177,9 +178,8 @@ class Postmen(object):
                 try :
                     ret = json.loads(response.text, cls=kls)
                 except ValueError as e :
-                    error_code = 500
                     error_message = "Something went wrong on Postmen's end"
-                    raise PostmenException(message = error_message, code = error_code, retryable = False)
+                    raise PostmenException(message = error_message, code = 500)
                 meta_code = ret.get('meta', {}).get('code', None)
                 # print ret
                 if not meta_code:
@@ -199,11 +199,12 @@ class Postmen(object):
         proxy = kwargs.get('proxy', self._proxy)
         body  = kwargs.get('body', {})
         query = kwargs.get('query', {})
+        endpoint = kwargs.get('endpoint', self._endpoint)
 
         headers = self._headers
 
         url = six.moves.urllib.parse.urljoin(
-            self._endpoint,
+            endpoint,
             '%s/%s' % (self._version, path),
             allow_fragments=False
         )
@@ -214,6 +215,9 @@ class Postmen(object):
                 value = query[key]
                 if isinstance(value, datetime.datetime):
                     query[key] = value.isoformat()
+        elif isinstance(query, six.string_types):
+            if query[0] is not '?' :
+                query = '?%s' % query
 
         return {
             "method":  method,
@@ -248,7 +252,10 @@ class Postmen(object):
         self._error = None
         params = self._get_requests_params(method, path, **kwargs)
         self._apply_rate_limit()
-        response = requests.request(**params)
+        try:
+            response = requests.request(**params)
+        except Exception as e :
+            raise PostmenException(message = 'Failed to perform HTTP request')
         return self._response(response, **kwargs)
 
     def call(self, method, path, **kwargs):
@@ -265,6 +272,7 @@ class Postmen(object):
         
         :raises PostmenException: all errors and exceptions
         """
+        retry  = kwargs.get('retry', self._retry)
         safe  = kwargs.get('safe', self._safe)
         tries = kwargs.get('tries', self._retries)
         count = 0
@@ -273,7 +281,7 @@ class Postmen(object):
             try:
                 return self._call_ones(method, path, **kwargs)
             except PostmenException as e:
-                if not e.retryable():
+                if not e.retryable() or not retry:
                     return self._report_error(e, safe)
                 count = count + 1
                 if count >= tries:
@@ -354,4 +362,5 @@ class Postmen(object):
         
         :returns: same as Postmen.call()
         """
-        return self.POST(resource, payload, **kwargs)
+        kwargs['body'] = payload
+        return self.POST(resource, **kwargs)
