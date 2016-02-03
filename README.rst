@@ -12,13 +12,13 @@ issue <https://github.com/postmen/postmen-sdk-python/issues>`__
 -  `class Postmen <#class-postmen>`__
 
    -  `Postmen(api_key, region, **kwargs) <#postmenapi_key-region-kwargs>`__
-   -  `create\(self, resource, payload, \*\*kwargs\)`__
-   -  `get\(self, resource, id\_\=None, \*\*kwargs\)`__
+   -  `create(self, resource, payload, **kwargs) <#createself-resource-payload-kwargs>`__
+   -  `get(self, resource, id_=None, **kwargs) <#getself-resource-id_none-kwargs>`__
    -  `getError() <#geterror>`__
-   -  `get\(self, path, \*\*kwargs\)`__
-   -  `POST(self, path, \*\*kwargs)`__
-   -  `PUT(self, path, \*\*kwargs)`__
-   -  `DELETE(self, path, \*\*kwargs)`__
+   -  `GET(self, path, **kwargs) <#getself-path-kwargs>`__
+   -  `POST(self, path, **kwargs) <#postself-path-kwargs>`__
+   -  `PUT(self, path, **kwargs) <#putself-path-kwargs>`__
+   -  `DELETE(self, path, **kwargs) <#deleteself-path-kwargs>`__
 
 -  `Error Handling <#error-handling>`__
 
