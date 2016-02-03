@@ -7,29 +7,41 @@ issue <https://github.com/postmen/postmen-sdk-python/issues>`__
 
 **Table of Contents**
 
-- `Installation <#installation>`__
-   - `Manual <#manual>`__
-   - `PyPI <#pypi>`__
-- `Quick Start <#quick-start>`__
-- `class Postmen <#class-postmen>`__
-- `Postmen(api\_key, region, \*\*kwargs) <#postmenapi%5C_key-region-%5C%5Ckwargs>`__
-- `create(self, resource, payload, \*\*kwargs) <#createself-resource-payload-%5C%5Ckwargs>`__
-- `get(self, resource, id\_=None, \*\*kwargs) <#getself-resource-id%5C_none-%5C%5Ckwargs>`__
-- `getError() <#geterror>`__
-- `GET(self, path, \*\*kwargs) <#getself-path-%5C%5Ckwargs>`__
-- `POST(self, path, \*\*kwargs) <#postself-path-%5C%5Ckwargs>`__
-- `PUT(self, path, \*\*kwargs) <#putself-path-%5C%5Ckwargs>`__
-- `DELETE(self, path, \*\*kwargs) <#deleteself-path-%5C%5Ckwargs>`__
-- `Error Handling <#error-handling>`__
-- `class PostmenException <#class-postmenexception>`__
-- `Automatic retry on retryable error <#automatic-retry-on-retryable-error>`__
-- `Examples <#examples>`__
-- `Full list <#full-list>`__
-- `How to run <#how-to-run>`__
-- `Navigation table <#navigation-table>`__
-- `Testing <#testing>`__
-- `License <#license>`__
-- `Contributors <#contributors>`__
+-  `Installation <#installation>`__
+-  `Quick Start <#quick-start>`__
+-  `class Postmen <#class-postmen>`__
+
+   -  `Postmen(api\_key, region,
+      \*\*kwargs) <Postmen(api\_key, region, \*\*kwargs)>`__
+   -  `create(self, resource, payload,
+      \*\*kwargs) <create(self, resource, payload, \*\*kwargs)>`__
+   -  `get(self, resource, id\_=None,
+      \*\*kwargs) <get(self, resource, id\_=None, \*\*kwargs)>`__
+   -  `getError() <#geterror>`__
+   -  `GET(self, path,
+      \*\*kwargs) <GET(self, path, \*\*kwargs)>`__
+   -  `POST(self, path,
+      \*\*kwargs) <POST(self, path, \*\*kwargs)>`__
+   -  `PUT(self, path,
+      \*\*kwargs) <PUT(self, path, \*\*kwargs)>`__
+   -  `DELETE(self, path,
+      \*\*kwargs) <DELETE(self, path, \*\*kwargs)>`__
+
+-  `Error Handling <#error-handling>`__
+
+   -  `class PostmenException <#class-postmenexception>`__
+   -  `Automatic retry on retryable
+      error <#automatic-retry-on-retryable-error>`__
+
+-  `Examples <#examples>`__
+
+   -  `Full list <#full-list>`__
+   -  `How to run <#how-to-run>`__
+   -  `Navigation table <#navigation-table>`__
+
+-  `Testing <#testing>`__
+-  `License <#license>`__
+-  `Contributors <#contributors>`__
 
 Installation
 ------------
