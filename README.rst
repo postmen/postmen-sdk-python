@@ -11,14 +11,14 @@ issue <https://github.com/postmen/postmen-sdk-python/issues>`__
 -  `Quick Start <#quick-start>`__
 -  `class Postmen <#class-postmen>`__
 
-   -  `Postmen(api\_key, region, \*\*kwargs) <#postmen(api\_key, region, \*\*kwargs)>`__
-   -  `create(self, resource, payload, \*\*kwargs) <#create(self, resource, payload, \*\*kwargs)>`__
-   -  `get(self, resource, id\_=None, \*\*kwargs) <#get(self, resource, id\_=None, \*\*kwargs)>`__
+   -  `Postmen(api\_key, region, \*\*kwargs)`__
+   -  `create(self, resource, payload, \*\*kwargs)`__
+   -  `get(self, resource, id\_=None, \*\*kwargs)`__
    -  `getError() <#geterror>`__
-   -  `GET(self, path, \*\*kwargs) <#get(self, path, \*\*kwargs)>`__
-   -  `POST(self, path, \*\*kwargs) <#post(self, path, \*\*kwargs)>`__
-   -  `PUT(self, path, \*\*kwargs) <#put(self, path, \*\*kwargs)>`__
-   -  `DELETE(self, path, \*\*kwargs) <#delete(self, path, \*\*kwargs)>`__
+   -  `GET(self, path, \*\*kwargs)`__
+   -  `POST(self, path, \*\*kwargs)`__
+   -  `PUT(self, path, \*\*kwargs)`__
+   -  `DELETE(self, path, \*\*kwargs)`__
 
 -  `Error Handling <#error-handling>`__
 
