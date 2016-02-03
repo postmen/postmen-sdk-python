@@ -151,7 +151,7 @@ Creates API ``resource`` object, returns new object payload as
 |              |         | String      |         |                                                   |
 +--------------+---------+-------------+---------+---------------------------------------------------+
 | ``**kwargs`` | NO      | Named       | N / A   | Override constructor                              |
-|              |         | arguments   |         | `config <#postmenapi_key-region-config--array>`__ |
+|              |         | arguments   |         | `config <#postmenapi_key-region-kwargs>`__        |
 +--------------+---------+-------------+---------+---------------------------------------------------+
 
 **API Docs:**
@@ -187,7 +187,7 @@ Gets API ``$resource`` objects (list or a single objects).
 |              |         | String         |         |                                                   |
 +--------------+---------+----------------+---------+---------------------------------------------------+
 | ``**kwargs`` | NO      | Named          | N / A   | Override constructor                              |
-|              |         | arguments      |         | `config <#postmenapi_key-region-config--array>`__ |
+|              |         | arguments      |         | `config <#postmenapi_key-region-kwargs>`__        |
 +--------------+---------+----------------+---------+---------------------------------------------------+
 
 **API Docs:**
@@ -234,7 +234,7 @@ response.
 +--------------+---------+----------------+---------+---------------------------------------------------+
 | ``**kwargs`` | NO      | Named          | ``array | ``query``, and other values                       |
 |              |         | arguments      | ()``    | overriding constructor                            |
-|              |         |                |         | `config <#postmenapi_key-region-config--array>`__ |
+|              |         |                |         | `config <#postmenapi_key-region-kwargs>`__        |
 +--------------+---------+----------------+---------+---------------------------------------------------+
 
 POST(self, path, \*\*kwargs)
@@ -258,7 +258,7 @@ holding API response.
 |              |         | String         |         | (named argument)                                  |
 +--------------+---------+----------------+---------+---------------------------------------------------+
 | ``**kwargs`` | NO      | Named          | N / A   | Override constructor                              |
-|              |         | arguments      |         | `config <#postmenapi_key-region-config--array>`__ |
+|              |         | arguments      |         | `config <#postmenapi_key-region-kwargs>`__        |
 |              |         |                |         |                                                   |
 +--------------+---------+----------------+---------+---------------------------------------------------+
 
