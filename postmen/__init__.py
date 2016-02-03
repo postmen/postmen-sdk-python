@@ -122,7 +122,7 @@ class Postmen(object):
         self._endpoint = endpoint if endpoint else 'https://%s-api.postmen.com' % region
         self._headers = {'content-type': 'application/json'}
         self._headers['postmen-api-key'] = api_key
-        self._headers['x-postmen-agent'] = 'python-sdk-0.6'
+        self._headers['x-postmen-agent'] = 'python-sdk-1.0'
         self._raw = raw
         self._safe = safe
         self._time = time
