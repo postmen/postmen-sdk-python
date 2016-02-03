@@ -216,7 +216,7 @@ class Postmen(object):
                 if isinstance(value, datetime.datetime):
                     query[key] = value.isoformat()
         elif isinstance(query, six.string_types):
-            if query[0] is not '?' :
+            if query[0] != '?' :
                 query = '?%s' % query
 
         return {
