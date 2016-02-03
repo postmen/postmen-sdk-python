@@ -11,7 +11,7 @@ issue <https://github.com/postmen/postmen-sdk-python/issues>`__
 -  `Quick Start <#quick-start>`__
 -  `class Postmen <#class-postmen>`__
 
-   -  `postmen(api\_key, region, \*\*kwargs)`__
+   -  `Postmen(api_key, region, **kwargs) <#postmenapi_key-region-kwargs>`__
    -  `create\(self, resource, payload, \*\*kwargs\)`__
    -  `get\(self, resource, id\_\=None, \*\*kwargs\)`__
    -  `getError() <#geterror>`__
