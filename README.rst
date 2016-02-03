@@ -1,9 +1,9 @@
 Introduction
 ------------
 
-PHP SDK for `Postmen API <https://docs.postmen.com/>`__. For problems
+Python SDK for `Postmen API <https://docs.postmen.com/>`__. For problems
 and suggestions please open `GitHub
-issue <https://github.com/postmen/postmen-sdk-php/issues>`__
+issue <https://github.com/postmen/postmen-sdk-python/issues>`__
 
 **Table of Contents**
 
@@ -103,51 +103,43 @@ Postmen(api\_key, region, \*\*kwargs)
 Initiate Postmen SDK object. In order to get API key and choose a region
 refer to the `documentation <https://docs.postmen.com/overview.html>`__.
 
-+------------------+---------------------+------+-------+---------------------------+
-| Argument         | Required            | Type | Defau | Description               |
-|                  |                     |      | lt    |                           |
-+==================+=====================+======+=======+===========================+
-| ``api_key``      | YES                 | Stri | N / A | API key                   |
-|                  |                     | ng   |       |                           |
-+------------------+---------------------+------+-------+---------------------------+
-| ``region``       | NO if ``endpoint``  | Stri | N / A | API region (``sandbox``,  |
-|                  | is set              | ng   |       | ``production``)           |
-+------------------+---------------------+------+-------+---------------------------+
-| ``endpoint``     | —                   | Stri | N / A | Custom URL API endpoint   |
-|                  |                     | ng   |       |                           |
-+------------------+---------------------+------+-------+---------------------------+
-| ``retry``        | —                   | Bool | ``TRU | Automatic retry on        |
-|                  |                     | ean  | E``   | retryable errors          |
-+------------------+---------------------+------+-------+---------------------------+
-| ``rate``         | —                   | Bool | ``TRU | Wait before API call if   |
-|                  |                     | ean  | E``   | rate limit exceeded or    |
-|                  |                     |      |       | retry on 429 error        |
-+------------------+---------------------+------+-------+---------------------------+
-| ``safe``         | —                   | Bool | ``FAL | Suppress exceptions on    |
-|                  |                     | ean  | SE``  | errors, None would be     |
-|                  |                     |      |       | returned instead, check   |
-|                  |                     |      |       | `Error                    |
-|                  |                     |      |       | Handling <#error-handling |
-|                  |                     |      |       | >`__                      |
-+------------------+---------------------+------+-------+---------------------------+
-| ``raw``          | —                   | Bool | ``FAL | To return API response as |
-|                  |                     | ean  | SE``  | a raw string              |
-+------------------+---------------------+------+-------+---------------------------+
-| ``proxy``        | —                   | Dict | ``{}` | Proxy credentials,        |
-|                  |                     | iona | `     | handled as in `requests   |
-|                  |                     | ry   |       | library <http://docs.pyth |
-|                  |                     |      |       | on-requests.org/en/latest |
-|                  |                     |      |       | /user/advanced/#proxies>` |
-|                  |                     |      |       | __                        |
-+------------------+---------------------+------+-------+---------------------------+
-| ``time``         | —                   | Bool | ``Fal | Convert ISO time strings  |
-|                  |                     | ean  | se``  | into                      |
-|                  |                     |      |       | `datetime <https://docs.p |
-|                  |                     |      |       | ython.org/2/library/datet |
-|                  |                     |      |       | ime.html#datetime-objects |
-|                  |                     |      |       | >`__                      |
-|                  |                     |      |       | objects                   |
-+------------------+---------------------+------+-------+---------------------------+
++------------------+---------------------+------------+----------+---------------------------------------------------------------------------------+
+| Argument         | Required            | Type       | Default  | Description                                                                     |
++==================+=====================+============+==========+=================================================================================+
+| ``api_key``      | YES                 | String     | N / A    | API key                                                                         |
++------------------+---------------------+------------+----------+---------------------------------------------------------------------------------+
+| ``region``       | NO if ``endpoint``  | String     | N / A    | API region (``sandbox``,                                                        |
+|                  | is set              |            |          | ``production``)                                                                 |
++------------------+---------------------+------------+----------+---------------------------------------------------------------------------------+
+| ``endpoint``     | —                   | String     | N / A    | Custom URL API endpoint                                                         |
++------------------+---------------------+------------+----------+---------------------------------------------------------------------------------+
+| ``retry``        | —                   | Boolean    | ``True`` | Automatic retry on retryable errors                                             |
++------------------+---------------------+------------+----------+---------------------------------------------------------------------------------+
+| ``rate``         | —                   | Boolean    | ``True`` | Wait before API call if                                                         |
+|                  |                     |            |          | rate limit exceeded or                                                          |
+|                  |                     |            |          | retry on 429 error                                                              |
++------------------+---------------------+------------+----------+---------------------------------------------------------------------------------+
+| ``safe``         | —                   | Boolean    | ``False``| Suppress exceptions on                                                          |
+|                  |                     |            |          | errors, None would be                                                           |
+|                  |                     |            |          | returned instead, check                                                         |
+|                  |                     |            |          | `Error Handling <#error-handling>`__                                            |
++------------------+---------------------+------------+----------+---------------------------------------------------------------------------------+
+| ``raw``          | —                   | Boolean    | ``False``| To return API response as a raw string                                          |
++------------------+---------------------+------------+----------+---------------------------------------------------------------------------------+
+| ``proxy``        | —                   | Dictionary | ``{}``   | Proxy credentials,                                                              |
+|                  |                     |            |          | handled as in `requests                                                         |
+|                  |                     |            |          | library <http://docs.python-requests.org/en/latest/user/advanced/#proxies>`__   |
+|                  |                     |            |          |                                                                                 |
+|                  |                     |            |          |                                                                                 |
+|                  |                     |            |          |                                                                                 |
++------------------+---------------------+------------+----------+---------------------------------------------------------------------------------+
+| ``time``         | —                   | Boolean    | ``False``| Convert ISO time strings                                                        |
+|                  |                     |            |          | into                                                                            |
+|                  |                     |            |          | `datetime <https://docs.python.org/2/library/datetime.html#datetime-objects>`__ |
+|                  |                     |            |          | objects                                                                         |
++------------------+---------------------+------------+----------+---------------------------------------------------------------------------------+
+
+
 
 create(self, resource, payload, \*\*kwargs)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -155,80 +147,73 @@ create(self, resource, payload, \*\*kwargs)
 Creates API ``resource`` object, returns new object payload as
 ``Dictionary``.
 
-+-----------+---------+-------------+---------+--------------------------------------+
-| Argument  | Require | Type        | Default | Description                          |
-|           | d       |             |         |                                      |
-+===========+=========+=============+=========+======================================+
-| ``resourc | YES     | String      | N / A   | Postmen API resourse ('rates',       |
-| e``       |         |             |         | 'labels', 'manifests')               |
-+-----------+---------+-------------+---------+--------------------------------------+
-| ``payload | YES     | Array or    | N / A   | Payload according to API             |
-| ``        |         | String      |         |                                      |
-+-----------+---------+-------------+---------+--------------------------------------+
-| ``**kwarg | NO      | Named       | N / A   | Override constructor                 |
-| s``       |         | arguments   |         | `config <#postmenapi_key-region-conf |
-|           |         |             |         | ig--array>`__                        |
-+-----------+---------+-------------+---------+--------------------------------------+
++--------------+---------+-------------+---------+---------------------------------------------------+
+| Argument     | Required| Type        | Default | Description                                       |
+|              |         |             |         |                                                   |
++==============+=========+=============+=========+===================================================+
+| ``resource`` | YES     | String      | N / A   | Postmen API resourse ('rates',                    |
+|              |         |             |         | 'labels', 'manifests')                            |
++--------------+---------+-------------+---------+---------------------------------------------------+
+| ``payload``  | YES     | Array or    | N / A   | Payload according to API                          |
+|              |         | String      |         |                                                   |
++--------------+---------+-------------+---------+---------------------------------------------------+
+| ``**kwargs`` | NO      | Named       | N / A   | Override constructor                              |
+|              |         | arguments   |         | `config <#postmenapi_key-region-config--array>`__ |
++--------------+---------+-------------+---------+---------------------------------------------------+
 
-**API Docs:** - `POST
-/rates <https://docs.postmen.com/#rates-calculate-rates>`__ - `POST
-/labels <https://docs.postmen.com/#labels-create-a-label>`__ - `POST
-/manifests <https://docs.postmen.com/#manifests-create-a-manifest>`__ -
-`POST
-/cancel-labels <https://docs.postmen.com/#cancel-labels-cancel-a-label>`__
+**API Docs:**
 
-**Examples:** -
-`rates\_create.py <https://github.com/postmen/postmen-sdk-python/blob/master/examples/rates_create.py>`__
--
-`labels\_create.py <https://github.com/postmen/postmen-sdk-python/blob/master/examples/labels_create.py>`__
--
-`manifests\_create.py <https://github.com/postmen/postmen-sdk-python/blob/master/examples/manifests_create.py>`__
--
-`cancel\_labels\_create.py <https://github.com/postmen/postmen-sdk-python/blob/master/examples/cancel_labels_create.py>`__
+- `POST /rates <https://docs.postmen.com/#rates-calculate-rates>`__
+- `POST /labels <https://docs.postmen.com/#labels-create-a-label>`__
+- `POST /manifests <https://docs.postmen.com/#manifests-create-a-manifest>`__
+- `POST /cancel-labels <https://docs.postmen.com/#cancel-labels-cancel-a-label>`__
+
+**Examples:**
+
+- `rates\_create.py <https://github.com/postmen/postmen-sdk-python/blob/master/examples/rates_create.py>`__
+- `labels\_create.py <https://github.com/postmen/postmen-sdk-python/blob/master/examples/labels_create.py>`__
+- `manifests\_create.py <https://github.com/postmen/postmen-sdk-python/blob/master/examples/manifests_create.py>`__
+- `cancel\_labels\_create.py <https://github.com/postmen/postmen-sdk-python/blob/master/examples/cancel_labels_create.py>`__
 
 get(self, resource, id\_=None, \*\*kwargs)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Gets API ``$resource`` objects (list or a single objects).
 
-+-----------+---------+-------------+---------+--------------------------------------+
-| Argument  | Require | Type        | Default | Description                          |
-|           | d       |             |         |                                      |
-+===========+=========+=============+=========+======================================+
-| ``resourc | YES     | String      | N / A   | Postmen API resourse ('rates',       |
-| e``       |         |             |         | 'labels', 'manifests')               |
-+-----------+---------+-------------+---------+--------------------------------------+
-| ``id``    | NO      | String      | ``None` | Object ID, if not set 'list all' API |
-|           |         |             | `       | method is used                       |
-+-----------+---------+-------------+---------+--------------------------------------+
-| ``**kwarg | NO      | Named       | N / A   | ``query``, and other values          |
-| s``       |         | arguments   |         | overriding constructor               |
-|           |         |             |         | `config <#postmenapi_key-region-conf |
-|           |         |             |         | ig--array>`__                        |
-+-----------+---------+-------------+---------+--------------------------------------+
++--------------+---------+----------------+---------+---------------------------------------------------+
+| Argument     | Required| Type           | Default | Description                                       |
+|              |         |                |         |                                                   |
++==============+=========+================+=========+===================================================+
+| ``resource`` | YES     | String         | N / A   | Postmen API resourse ('rates',                    |
+|              |         |                |         | 'labels', 'manifests')                            |
++--------------+---------+----------------+---------+---------------------------------------------------+
+| ``id``       | NO      | String         | ``None``| Object ID, if not set 'list all' API              |
+|              |         |                |         | method is used                                    |
++--------------+---------+----------------+---------+---------------------------------------------------+
+| ``query``    | NO      | Dictionary or  | N / A   | HTTP GET query (named argument)                   |
+|              |         | String         |         |                                                   |
++--------------+---------+----------------+---------+---------------------------------------------------+
+| ``**kwargs`` | NO      | Named          | N / A   | Override constructor                              |
+|              |         | arguments      |         | `config <#postmenapi_key-region-config--array>`__ |
++--------------+---------+----------------+---------+---------------------------------------------------+
 
-**API Docs:** - `GET
-/rates <https://docs.postmen.com/#rates-list-all-rates>`__ - `GET
-/rates/:id <https://docs.postmen.com/#rates-retrieve-rates>`__ - `GET
-/labels <https://docs.postmen.com/#labels-list-all-labels>`__ - `GET
-/labels/:id <https://docs.postmen.com/#labels-retrieve-a-label>`__ -
-`GET
-/manifests <https://docs.postmen.com/#manifests-list-all-manifests>`__ -
-`GET
-/manifests/:id <https://docs.postmen.com/#manifests-retrieve-a-manifest>`__
-- `GET
-/cancel-labels <https://docs.postmen.com/#cancel-labels-list-all-cancel-labels>`__
-- `GET
-/cancel-labels/:id <https://docs.postmen.com/#cancel-labels-retrieve-a-cancel-label>`__
+**API Docs:**
 
-**Examples:** -
-`rates\_retrieve.py <https://github.com/postmen/postmen-sdk-python/blob/master/examples/rates_retrieve.py>`__
--
-`labels\_retrieve.py <https://github.com/postmen/postmen-sdk-python/blob/master/examples/labels_retrieve.py>`__
--
-`manifests\_retrieve.py <https://github.com/postmen/postmen-sdk-python/blob/master/examples/manifests_retrieve.py>`__
--
-`cancel\_labels\_retrieve.py <https://github.com/postmen/postmen-sdk-python/blob/master/examples/cancel_labels_retrieve.py>`__
+- `GET /rates <https://docs.postmen.com/#rates-list-all-rates>`__ 
+- `GET /rates/:id <https://docs.postmen.com/#rates-retrieve-rates>`__ 
+- `GET /labels <https://docs.postmen.com/#labels-list-all-labels>`__ 
+- `GET /labels/:id <https://docs.postmen.com/#labels-retrieve-a-label>`__ 
+- `GET /manifests <https://docs.postmen.com/#manifests-list-all-manifests>`__ 
+- `GET /manifests/:id <https://docs.postmen.com/#manifests-retrieve-a-manifest>`__
+- `GET /cancel-labels <https://docs.postmen.com/#cancel-labels-list-all-cancel-labels>`__
+- `GET /cancel-labels/:id <https://docs.postmen.com/#cancel-labels-retrieve-a-cancel-label>`__
+
+**Examples:**
+
+- `rates\_retrieve.py <https://github.com/postmen/postmen-sdk-python/blob/master/examples/rates_retrieve.py>`__
+- `labels\_retrieve.py <https://github.com/postmen/postmen-sdk-python/blob/master/examples/labels_retrieve.py>`__
+- `manifests\_retrieve.py <https://github.com/postmen/postmen-sdk-python/blob/master/examples/manifests_retrieve.py>`__
+- `cancel\_labels\_retrieve.py <https://github.com/postmen/postmen-sdk-python/blob/master/examples/cancel_labels_retrieve.py>`__
 
 getError()
 ^^^^^^^^^^
@@ -244,46 +229,45 @@ GET(self, path, \*\*kwargs)
 Performs HTTP GET request, returns an ``Dictionary`` object holding API
 response.
 
-+-----------+---------+----------------+---------+-----------------------------------+
-| Argument  | Require | Type           | Default | Description                       |
-|           | d       |                |         |                                   |
-+===========+=========+================+=========+===================================+
-| ``path``  | YES     | String         | N / A   | URL path (e.g. 'v3/labels' for    |
-|           |         |                |         | ``https://sandbox-api.postmen.com |
-|           |         |                |         | /v3/labels``                      |
-|           |         |                |         | )                                 |
-+-----------+---------+----------------+---------+-----------------------------------+
-| ``**kwarg | NO      | Named          | ``array | ``query``, and other values       |
-| s``       |         | arguments      | ()``    | overriding constructor            |
-|           |         |                |         | `config <#postmenapi_key-region-c |
-|           |         |                |         | onfig--array>`__                  |
-+-----------+---------+----------------+---------+-----------------------------------+
++--------------+---------+----------------+---------+---------------------------------------------------+
+| Argument     | Required| Type           | Default | Description                                       |
+|              |         |                |         |                                                   |
++==============+=========+================+=========+===================================================+
+| ``path``     | YES     | String         | N / A   | URL path (e.g. 'v3/labels' for                    |
+|              |         |                |         | ``https://sandbox-api.postmen.com/v3/labels``)    |
++--------------+---------+----------------+---------+---------------------------------------------------+
+| ``query``    | NO      | Dictionary or  | N / A   | HTTP GET query (named argument)                   |
+|              |         | String         |         |                                                   |
++--------------+---------+----------------+---------+---------------------------------------------------+
+| ``**kwargs`` | NO      | Named          | ``array | ``query``, and other values                       |
+|              |         | arguments      | ()``    | overriding constructor                            |
+|              |         |                |         | `config <#postmenapi_key-region-config--array>`__ |
++--------------+---------+----------------+---------+---------------------------------------------------+
 
-POST(self, path, **kwargs) #### PUT(self, path, **\ kwargs)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
+POST(self, path, \*\*kwargs)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PUT(self, path, \*\*kwargs)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 DELETE(self, path, \*\*kwargs)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Performs HTTP POST/PUT/DELETE request, returns a ``Dictionary`` object
 holding API response.
 
-+-----------+---------+----------------+---------+-----------------------------------+
-| Argument  | Require | Type           | Default | Description                       |
-|           | d       |                |         |                                   |
-+===========+=========+================+=========+===================================+
-| ``path``  | YES     | String         | N / A   | URL path (e.g. 'v3/labels' for    |
-|           |         |                |         | ``https://sandbox-api.postmen.com |
-|           |         |                |         | /v3/labels``                      |
-|           |         |                |         | )                                 |
-+-----------+---------+----------------+---------+-----------------------------------+
-| ``body``  | YES     | Dictionary or  | N / A   | HTTP POST/PUT/DELETE request body |
-|           |         | String         |         |                                   |
-+-----------+---------+----------------+---------+-----------------------------------+
-| ``**kwarg | NO      | Named          | N / A   | Override constructor              |
-| s``       |         | arguments      |         | `config <#postmenapi_key-region-c |
-|           |         |                |         | onfig--array>`__                  |
-+-----------+---------+----------------+---------+-----------------------------------+
++--------------+---------+----------------+---------+---------------------------------------------------+
+| Argument     | Required| Type           | Default | Description                                       |
+|              |         |                |         |                                                   |
++==============+=========+================+=========+===================================================+
+| ``path``     | YES     | String         | N / A   | URL path (e.g. 'v3/labels' for                    |
+|              |         |                |         | ``https://sandbox-api.postmen.com/v3/labels``)    |
++--------------+---------+----------------+---------+---------------------------------------------------+
+| ``body``     | NO      | Dictionary or  | N / A   | HTTP POST/PUT/DELETE request body                 |
+|              |         | String         |         | (named argument)                                  |
++--------------+---------+----------------+---------+---------------------------------------------------+
+| ``**kwargs`` | NO      | Named          | N / A   | Override constructor                              |
+|              |         | arguments      |         | `config <#postmenapi_key-region-config--array>`__ |
+|              |         |                |         |                                                   |
++--------------+---------+----------------+---------+---------------------------------------------------+
 
 Error Handling
 --------------
@@ -317,7 +301,7 @@ In case of ``safe = True`` SDK would not throw exceptions,
 `getError() <#geterror>`__ must be used instead.
 
 Example:
-`error.php <https://github.com/postmen/postmen-sdk-php/blob/master/examples/error.php>`__
+`error.py <https://github.com/postmen/postmen-sdk-python/blob/master/examples/error.py>`__
 
 Automatic retry on retryable error
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -381,112 +365,17 @@ Navigation table
 For each API method SDK provides Python wrapper. Use the table below to
 find SDK method and example that match your need.
 
-.. raw:: html
-
-   <table>
-
-.. raw:: html
-
-   <tr>
-
-::
-
-    <th>Model \ Action</th>
-    <th>create</th>
-    <th>get all</th>
-    <th>get by id</th>
-
-.. raw:: html
-
-   </tr>
-
-.. raw:: html
-
-   <tr>
-
-::
-
-    <th>rates</th>
-    <th><sub><a href="https://github.com/postmen/postmen-sdk-python/blob/master/examples/rates_create.py">
-      <code>.create('rates', payload)</code>
-    </a></sub></th>
-    <th><sub><a href="https://github.com/postmen/postmen-sdk-python/blob/master/examples/rates_retrieve.py#L16">
-      <code>.get('rates')</code>
-    </a></sub></th>
-    <th><sub><a href="https://github.com/postmen/postmen-sdk-python/blob/master/examples/rates_retrieve.py#L18">
-      <code>.get('rates', id)</code>
-    </a></sub></th>
-
-.. raw:: html
-
-   </tr>
-
-.. raw:: html
-
-   <tr>
-
-::
-
-    <th>labels</th>
-    <th><sub><a href="https://github.com/postmen/postmen-sdk-python/blob/master/examples/labels_create.py">
-      <code>.create('labels', payload)</code>
-    </a></sub></th>
-    <th><sub><a href="https://github.com/postmen/postmen-sdk-python/blob/master/examples/labels_retrieve.py#L16">
-      <code>.get('labels')</code>
-    </a></sub></th>
-    <th><sub><a href="https://github.com/postmen/postmen-sdk-python/blob/master/examples/labels_retrieve.py#L18">
-      <code>.get('labels', id)</code>
-    </a></sub></th>
-
-.. raw:: html
-
-   </tr>
-
-.. raw:: html
-
-   <tr>
-
-::
-
-    <th>manifest</th>
-    <th><sub><a href="https://github.com/postmen/postmen-sdk-python/blob/master/examples/manifests_create.py">
-      <code>.create('manifest', payload)</code>
-    </a></sub></th>
-    <th><sub><a href="https://github.com/postmen/postmen-sdk-python/blob/master/examples/manifests_retrieve.py#L16">
-      <code>.get('manifest')</code>
-    </a></sub></th>
-    <th><sub><a href="https://github.com/postmen/postmen-sdk-python/blob/master/examples/manifests_retrieve.py#L18">
-      <code>.get('manifest', id)</code>
-    </a></sub></th>
-
-.. raw:: html
-
-   </tr>
-
-.. raw:: html
-
-   <tr>
-
-::
-
-    <th>cancel-labels</th>
-    <th><sub><a href="https://github.com/postmen/postmen-sdk-python/blob/master/examples/cancel_labels_create.py">
-      <code>.create('cancel-labels', payload)</code>
-    </a></sub></th>
-    <th><sub><a href="https://github.com/postmen/postmen-sdk-python/blob/master/examples/cancel_labels_retrieve.py#L16">
-      <code>.get('cancel-labels')</code>
-    </a></sub></th>
-    <th><sub><a href="https://github.com/postmen/postmen-sdk-python/blob/master/examples/cancel_labels_retrieve.py#L18">
-      <code>.get('cancel-labels', id)</code>
-    </a></sub></th>
-
-.. raw:: html
-
-   </tr>
-
-.. raw:: html
-
-   </table>
++-----------------+-----------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------+
+| Model \\ Action | create                                                                                                                            | get all                                                                                                                  | get by id                                                                                                                    | 
++-----------------+-----------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------+
+| rates           | `.create('rates', payload) <https://github.com/postmen/postmen-sdk-python/blob/master/examples/rates_create.py>`__                | `.get('rates') <https://github.com/postmen/postmen-sdk-python/blob/master/examples/labels_retrieve.py>`__                | `.get('rates', id) <https://github.com/postmen/postmen-sdk-python/blob/master/examples/rates_retrieve.py>`__                 |
++-----------------+-----------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------+
+| labels          | `.create('labels', payload) <https://github.com/postmen/postmen-sdk-python/blob/master/examples/labels_create.py>`__              | `.get('labels') <https://github.com/postmen/postmen-sdk-python/blob/master/examples/labels_retrieve.py>`__               | `.get('labels', id) <https://github.com/postmen/postmen-sdk-python/blob/master/examples/labels_retrieve.py>`__               |
++-----------------+-----------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------+
+| manifests       | `.create('manifests', payload) <https://github.com/postmen/postmen-sdk-python/blob/master/examples/manifests_create.py>`__        | `.get('manifests') <https://github.com/postmen/postmen-sdk-python/blob/master/examples/manifests_retrieve.py>`__         | `.get('manifests', id) <https://github.com/postmen/postmen-sdk-python/blob/master/examples/manifests_retrieve.py>`__         |
++-----------------+-----------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------+
+| cancel-labels   | `.create('cancel-labels', payload) <https://github.com/postmen/postmen-sdk-python/blob/master/examples/cancel_labels_create.py>`__| `.get('cancel-labels') <https://github.com/postmen/postmen-sdk-python/blob/master/examples/cancel_labels_retrieve.py>`__ | `.get('cancel-labels', id) <https://github.com/postmen/postmen-sdk-python/blob/master/examples/cancel_labels_retrieve.py>`__ |
++-----------------+-----------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------+
 
 Testing
 -------
