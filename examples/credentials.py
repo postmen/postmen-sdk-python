@@ -1,3 +1,7 @@
+import pprint
+
+pp = pprint.PrettyPrinter(indent=4)
+
 from postmen import Postmen
 from postmen import PostmenException
 

@@ -13,8 +13,8 @@ try:
     # get a particular manifest
     result_particular = api.get('manifests', manifest)
     print "RESULT"
-    print result_all
-    print result_particular
+    pp.pprint(result_all)
+    pp.pprint(result_particular)
 except PostmenException as e:
     print "ERROR"
     print e.code()
