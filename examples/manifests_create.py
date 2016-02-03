@@ -17,7 +17,7 @@ try:
     api = Postmen(key, region)
     result = api.create('manifests', payload)
     print "RESULT"
-    print result
+    pp.pprint(result)
 except PostmenException as e:
     print "ERROR"
     print e.code()

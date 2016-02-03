@@ -106,25 +106,23 @@ class Postmen(object):
     :raises PostmenException: if version is missed
     """
     def __init__(
-        self, api_key, region=None, endpoint=None, version='v3', x_agent='python-sdk-0.6',
-        retries=5, raw=False, safe=False, time=False, proxy={}, retry=True, rate = True
+        self, api_key, region=None, endpoint=None,
+        raw=False, safe=False, time=False, proxy={}, retry=True, rate = True
     ):
         e = None
         if not api_key:
             e = PostmenException(message='missed API key')
         if not region and not endpoint:
             e = PostmenException(message='missed region')
-        if not version:
-            e = PostmenException(message='missed API version')
-        self._retries = retries
+        self._retries = 5
         self._error = None
-        self._version = version
+        self._version = 'v3'
         self._calls_left = None
         self._time_before_reset = None
         self._endpoint = endpoint if endpoint else 'https://%s-api.postmen.com' % region
         self._headers = {'content-type': 'application/json'}
         self._headers['postmen-api-key'] = api_key
-        self._headers['x-postmen-agent'] = x_agent
+        self._headers['x-postmen-agent'] = 'python-sdk-0.6'
         self._raw = raw
         self._safe = safe
         self._time = time
@@ -247,8 +245,6 @@ class Postmen(object):
         time  = kwargs.get('time', self._time)
         proxy = kwargs.get('proxy', self._proxy)
         tries = kwargs.get('tries', self._retries)
-        body  = kwargs.get('body', {})
-        query = kwargs.get('query', {})
         self._error = None
         params = self._get_requests_params(method, path, **kwargs)
         self._apply_rate_limit()

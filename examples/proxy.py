@@ -11,6 +11,8 @@ proxies = {
 try:
     api = Postmen(key, region, proxy = proxies)
     result = api.get('labels')
+    print "RESULT"
+    pp.pprint(result)
 except PostmenException as e:
     print "ERROR"
     print e.code()

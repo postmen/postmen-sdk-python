@@ -16,7 +16,7 @@ try:
     api = Postmen(key, region)
     result = api.create('cancel-labels', payload)
     print "RESULT"
-    print result
+    pp.pprint(result)
 except PostmenException as e:
     print "ERROR"
     print e.code()

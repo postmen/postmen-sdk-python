@@ -13,8 +13,8 @@ try:
     # get a particular rate
     result_particular = api.get('rates', rate)
     print "RESULT"
-    print result_all
-    print result_particular
+    pp.pprint(result_all)
+    pp.pprint(result_particular)
 except PostmenException as e:
     print "ERROR"
     print e.code()
