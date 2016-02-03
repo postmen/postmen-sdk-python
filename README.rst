@@ -11,11 +11,11 @@ issue <https://github.com/postmen/postmen-sdk-python/issues>`__
 -  `Quick Start <#quick-start>`__
 -  `class Postmen <#class-postmen>`__
 
-   -  `Postmen(api\_key, region, \*\*kwargs)`__
-   -  `create(self, resource, payload, \*\*kwargs)`__
-   -  `get(self, resource, id\_=None, \*\*kwargs)`__
+   -  `postmen(api\_key, region, \*\*kwargs)`__
+   -  `create\(self, resource, payload, \*\*kwargs\)`__
+   -  `get\(self, resource, id\_\=None, \*\*kwargs\)`__
    -  `getError() <#geterror>`__
-   -  `GET(self, path, \*\*kwargs)`__
+   -  `get\(self, path, \*\*kwargs\)`__
    -  `POST(self, path, \*\*kwargs)`__
    -  `PUT(self, path, \*\*kwargs)`__
    -  `DELETE(self, path, \*\*kwargs)`__
