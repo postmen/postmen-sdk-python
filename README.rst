@@ -7,41 +7,29 @@ issue <https://github.com/postmen/postmen-sdk-python/issues>`__
 
 **Table of Contents**
 
--  `Installation <#installation>`__
--  `Quick Start <#quick-start>`__
--  `class Postmen <#class-postmen>`__
-
-   -  `Postmen(api\_key, region,
-      \*\*kwargs) <#postmenapi_key-region-config--array>`__
-   -  `create(self, resource, payload,
-      \*\*kwargs) <#createresource-payload-config--array>`__
-   -  `get(self, resource, id\_=None,
-      \*\*kwargs) <#getresource-id--null-query--array-config--array>`__
-   -  `getError() <#geterror>`__
-   -  `GET(self, path,
-      \*\*kwargs) <#callgetpath-query--array-options--array>`__
-   -  `POST(self, path,
-      \*\*kwargs) <#callpostpath--array-options--array>`__
-   -  `PUT(self, path,
-      \*\*kwargs) <#callputpath--array-options--array>`__
-   -  `DELETE(self, path,
-      \*\*kwargs) <#calldeletepath--array-options--array>`__
-
--  `Error Handling <#error-handling>`__
-
-   -  `class PostmenException <#class-postmenexception>`__
-   -  `Automatic retry on retryable
-      error <#automatic-retry-on-retryable-error>`__
-
--  `Examples <#examples>`__
-
-   -  `Full list <#full-list>`__
-   -  `How to run <#how-to-run>`__
-   -  `Navigation table <#navigation-table>`__
-
--  `Testing <#testing>`__
--  `License <#license>`__
--  `Contributors <#contributors>`__
+- `Installation <#installation>`__
+   - `Manual <#manual>`__
+   - `PyPI <#pypi>`__
+- `Quick Start <#quick-start>`__
+- `class Postmen <#class-postmen>`__
+- `Postmen(api\_key, region, \*\*kwargs) <#postmenapi%5C_key-region-%5C%5Ckwargs>`__
+- `create(self, resource, payload, \*\*kwargs) <#createself-resource-payload-%5C%5Ckwargs>`__
+- `get(self, resource, id\_=None, \*\*kwargs) <#getself-resource-id%5C_none-%5C%5Ckwargs>`__
+- `getError() <#geterror>`__
+- `GET(self, path, \*\*kwargs) <#getself-path-%5C%5Ckwargs>`__
+- `POST(self, path, \*\*kwargs) <#postself-path-%5C%5Ckwargs>`__
+- `PUT(self, path, \*\*kwargs) <#putself-path-%5C%5Ckwargs>`__
+- `DELETE(self, path, \*\*kwargs) <#deleteself-path-%5C%5Ckwargs>`__
+- `Error Handling <#error-handling>`__
+- `class PostmenException <#class-postmenexception>`__
+- `Automatic retry on retryable error <#automatic-retry-on-retryable-error>`__
+- `Examples <#examples>`__
+- `Full list <#full-list>`__
+- `How to run <#how-to-run>`__
+- `Navigation table <#navigation-table>`__
+- `Testing <#testing>`__
+- `License <#license>`__
+- `Contributors <#contributors>`__
 
 Installation
 ------------
