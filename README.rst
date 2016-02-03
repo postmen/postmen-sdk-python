@@ -12,20 +12,20 @@ issue <https://github.com/postmen/postmen-sdk-python/issues>`__
 -  `class Postmen <#class-postmen>`__
 
    -  `Postmen(api\_key, region,
-      \*\*kwargs) <Postmen(api\_key, region, \*\*kwargs)>`__
+      \*\*kwargs) <#Postmen(api\_key, region, \*\*kwargs)>`__
    -  `create(self, resource, payload,
-      \*\*kwargs) <create(self, resource, payload, \*\*kwargs)>`__
+      \*\*kwargs) <#create(self, resource, payload, \*\*kwargs)>`__
    -  `get(self, resource, id\_=None,
-      \*\*kwargs) <get(self, resource, id\_=None, \*\*kwargs)>`__
+      \*\*kwargs) <#get(self, resource, id\_=None, \*\*kwargs)>`__
    -  `getError() <#geterror>`__
    -  `GET(self, path,
-      \*\*kwargs) <GET(self, path, \*\*kwargs)>`__
+      \*\*kwargs) <#GET(self, path, \*\*kwargs)>`__
    -  `POST(self, path,
-      \*\*kwargs) <POST(self, path, \*\*kwargs)>`__
+      \*\*kwargs) <#POST(self, path, \*\*kwargs)>`__
    -  `PUT(self, path,
-      \*\*kwargs) <PUT(self, path, \*\*kwargs)>`__
+      \*\*kwargs) <#PUT(self, path, \*\*kwargs)>`__
    -  `DELETE(self, path,
-      \*\*kwargs) <DELETE(self, path, \*\*kwargs)>`__
+      \*\*kwargs) <#DELETE(self, path, \*\*kwargs)>`__
 
 -  `Error Handling <#error-handling>`__
 
