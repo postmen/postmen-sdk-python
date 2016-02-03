@@ -24,7 +24,7 @@ setup(
     url='https://github.com/postmen/sdk-python',
 
     # Download path
-    download_url = 'https://github.com/postmen/sdk-python/tarball/0.4',
+    download_url = 'https://github.com/postmen/sdk-python/tarball/1.0',
 
     # Author details
     author='Postmen',
@@ -39,7 +39,7 @@ setup(
         #   3 - Alpha
         #   4 - Beta
         #   5 - Production/Stable
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
