@@ -18,7 +18,7 @@ if six.PY2:
 else:
     from .rp3 import _raise
 
-__author__ = 'Postmen <support@postmen.com>'
+__author__ = 'Postmen <postmen@aftership.com>'
 
 class PostmenException(Exception):
     """Include errors reported by API, related to API (e.g. rate limit) and other exceptions during API calls (e.g. HTTP connectivity issue)."""
