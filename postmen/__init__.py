@@ -80,7 +80,7 @@ class Postmen(object):
 
     :param api_key: Postmen API key
     :type api_key: str or unicode
-    :param region: avalible regions: sandbox, us-west, ap-southeast. Part of API endpoint
+    :param region: avalible regions: sandbox, production. Part of API endpoint
     :type region: str or unicode
     :param endpoint: raw API endpoint string, overwrite region setting
     :type endpoint: str or unicode
