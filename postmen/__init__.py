@@ -100,7 +100,7 @@ class Postmen(object):
     :type proxy: dictionary like in http://docs.python-requests.org/en/latest/user/advanced/#proxies
     :param retry: True to retry calls in case of retriable errors
     :type retry: bool
-    
+
     :raises PostmenException: if API is missed
     :raises PostmenException: if region or endpoint is missed
     :raises PostmenException: if version is missed
@@ -122,7 +122,7 @@ class Postmen(object):
         self._endpoint = endpoint if endpoint else 'https://%s-api.postmen.com' % region
         self._headers = {'content-type': 'application/json'}
         self._headers['postmen-api-key'] = api_key
-        self._headers['x-postmen-agent'] = 'python-sdk-1.0'
+        self._headers['x-postmen-agent'] = 'python-sdk-1.1'
         self._raw = raw
         self._safe = safe
         self._time = time
@@ -262,10 +262,10 @@ class Postmen(object):
         :param path: URL path
         :type path: str or unicode
         :param **kwargs: query, body, raw, safe, time, proxy, retry params
-       
+
         :returns: API data response
         :rtype: dict or list or str or unicode
-        
+
         :raises PostmenException: all errors and exceptions
         """
         retry  = kwargs.get('retry', self._retry)
@@ -293,56 +293,56 @@ class Postmen(object):
 
     def GET(self, path, **kwargs):
         """Create, perform HTTP GET call to Postmen API, parse and return result.
-        
+
         :param path: URL path
         :type path: str or unicode
         :param **kwargs: query, raw, safe, time, proxy, retry params from Postmen.call()
-        
+
         :returns: same as Postmen.call()
         """
         return self.call('GET', path, **kwargs)
 
     def POST(self, path, **kwargs):
         """Create, perform HTTP POST call to Postmen API, parse and return result.
-        
+
         :param path: URL path
         :type path: str or unicode
         :param **kwargs: query, raw, safe, time, proxy, retry params from Postmen.call()
-        
+
         :returns: same as Postmen.call()
         """
         return self.call('POST', path, **kwargs)
 
     def PUT(self, path, **kwargs):
         """Create, perform HTTP PUT call to Postmen API, parse and return result.
-        
+
         :param path: URL path
         :type path: str or unicode
         :param **kwargs: query, raw, safe, time, proxy, retry params from Postmen.call()
-        
+
         :returns: same as Postmen.call()
         """
         return self.call('PUT', path, **kwargs)
 
     def DELETE(self, path, **kwargs):
         """Create, perform HTTP DELETE call to Postmen API, parse and return result.
-        
+
         :param path: URL path
         :type path: str or unicode
         :param **kwargs: query, raw, safe, time, proxy, retry params from Postmen.call()
-        
+
         :returns: same as Postmen.call()
         """
         return self.call('DELETE', path, **kwargs)
 
     def get(self, resource, id_=None, **kwargs):
         """List all or retrieve particular resource (e.g. /labels, /labels/:id)
-        
+
         :param resource: resource type (e.g. labels)
         :type resource: str or unicode
         :param id_: resource id, None to list all resources
         :type id_: str or unicode
-        
+
         :returns: same as Postmen.call()
         """
         method = '%s/%s' % (resource, str(id_)) if id_ else resource
@@ -350,12 +350,12 @@ class Postmen(object):
 
     def create(self, resource, payload, **kwargs):
         """Create resource object (e.g. label)
-        
+
         :param resource: resource type (e.g. labels)
         :type resource: str or unicode
         :param payload: API call payload
         :type payload: dict or list or str or unicode
-        
+
         :returns: same as Postmen.call()
         """
         kwargs['body'] = payload

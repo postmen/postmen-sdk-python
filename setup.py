@@ -15,7 +15,7 @@ setup(
     # Versions should comply with PEP440. For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # http://packaging.python.org/en/latest/tutorial.html#version
-    version='1.0',
+    version='1.1',
 
     description='Python SDK of Postmen API',
     long_description=long_description,
@@ -24,7 +24,7 @@ setup(
     url='https://github.com/postmen/sdk-python',
 
     # Download path
-    download_url = 'https://github.com/postmen/sdk-python/tarball/1.0',
+    download_url = 'https://github.com/postmen/sdk-python/tarball/1.1',
 
     # Author details
     author='Postmen',
