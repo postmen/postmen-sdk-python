@@ -374,9 +374,10 @@ Testing
 -------
 
 If you contribute to SDK, run automated test before you make pull
-request.
+request. ::
 
-``python setup.py test``
+  pip install -r requirements.txt
+  python setup.py test
 
 License
 -------
