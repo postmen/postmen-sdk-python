@@ -1,7 +1,6 @@
 from setuptools import setup
 from codecs import open  # To use a consistent encoding
 from os import path
-from pip.req import parse_requirements
 
 here = path.abspath(path.dirname(__file__))
 
