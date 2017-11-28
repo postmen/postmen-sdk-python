@@ -63,7 +63,7 @@ In order to get API key and choose a region refer to the
 
     pp = pprint.PrettyPrinter(indent=4)
 
-    from postmen import Postmen
+    from postmen import Postmen, PostmenException
 
     api_key = 'YOUR_API_KEY'
     region = 'sandbox'
@@ -76,16 +76,16 @@ In order to get API key and choose a region refer to the
         # as an example we request all the labels
         
         result = api.get('labels')
-        print "RESULT:"
+        print("RESULT:")
         pp.pprint(result)
     except PostmenException as e:
-        // if error occurs we can access all
-        // the details in following way
+        # if error occurs we can access all
+        # the details in following way
         
-        print "ERROR";
-        print e.code()  // error code
-        print e.message() // error message
-        pp.pprint(e.details())  // details
+        print("ERROR")
+        print(e.code())  # error code
+        print(e.message())  # error message
+        pp.pprint(e.details())  # details
 
 class Postmen
 -------------
