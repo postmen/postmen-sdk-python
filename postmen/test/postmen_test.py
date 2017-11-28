@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import pytest
 import traceback
 import responses
@@ -207,7 +209,7 @@ def testArgument12(monkeypatch):
     with pytest.raises(PostmenException) as e:
         api.get('labels')
     responses.reset()
-    #print e
+    #print(e)
     assert "PROBLEM" in str(e.value.message())
     assert not e.value.retryable()
     monkeypatch.setattr(time, 'sleep', lambda s: None)
@@ -404,7 +406,7 @@ def testTime():
     responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200, content_type='text/plain')
     api = Postmen('KEY', 'REGION')
     res = api.get('labels')
-    assert res['when'] == '2016-01-31T16:45:46+00:00' 
+    assert res['when'] == '2016-01-31T16:45:46+00:00'
     res = api.get('labels', time=True)
     assert isinstance(res['when'], datetime)
     api = Postmen('KEY', 'REGION', time=True)

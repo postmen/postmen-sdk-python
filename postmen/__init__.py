@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 """Postmen and PostmenException classes are intended for SDK users.
 """
 
@@ -151,12 +153,12 @@ class Postmen(object):
         raw   = kwargs.get('raw', self._raw)
         time  = kwargs.get('time', self._time)
 
-        # print response.headers
-        # print response.text
+        # print(response.headers)
+        # print(response.text)
 
         sec_before_reset = response.headers.get('x-ratelimit-reset', '0')
         sec_before_reset = int(sec_before_reset) / 1000
-        #print sec_before_reset
+        #print(sec_before_reset)
         if sec_before_reset:
             if not self._time_before_reset or self._time_before_reset < sec_before_reset:
                 self._time_before_reset = int(sec_before_reset)
@@ -165,8 +167,8 @@ class Postmen(object):
         if self._calls_left:
             self._calls_left = int(self._calls_left)
 
-        # print 'self._time_before_reset', self._time_before_reset
-        # print 'self._calls_left', self._calls_left
+        # print('self._time_before_reset', self._time_before_reset)
+        # print('self._calls_left', self._calls_left)
 
         if response.text:
             if raw:
@@ -179,7 +181,7 @@ class Postmen(object):
                     error_message = "Something went wrong on Postmen's end"
                     raise PostmenException(message = error_message, code = 500)
                 meta_code = ret.get('meta', {}).get('code', None)
-                # print ret
+                # print(ret)
                 if not meta_code:
                     raise PostmenException(message='API response missed meta info', **ret)
                 if int(meta_code) != 200 and int(meta_code / 1000) != 3:
@@ -228,14 +230,14 @@ class Postmen(object):
 
     def _apply_rate_limit(self):
         if isinstance(self._calls_left, six.integer_types) and self._calls_left <= 0:
-            # print 'self._time_before_reset', self._time_before_reset
-            # print 'int(time_module.time())', int(time_module.time())
+            # print('self._time_before_reset', self._time_before_reset)
+            # print('int(time_module.time())', int(time_module.time()))
             delta = self._time_before_reset - int(time_module.time())
             if delta > 0:
                 if not self._rate:
                     raise PostmenException(message = 'You have exceeded the API call rate limit. Please retry again at X-RateLimit-Reset header timestamp', code = 429, retryable = True)
                 else :
-                    # print 'apply delay', delta
+                    # print('apply delay', delta)
                     self._delay(delta)
 
     def _call_ones(self, method, path, **kwargs):

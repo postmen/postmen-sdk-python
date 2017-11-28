@@ -1,10 +1,12 @@
+from __future__ import print_function
+
 from credentials import *
 
 # TODO put ID of your shipper account
 shipper = None
 
 if shipper is None:
-    print 'shipper is not set, modify rates_create.py'
+    print('shipper is not set, modify rates_create.py')
 
 item = {
     'description': 'Food Bar',
@@ -79,7 +81,7 @@ payload = {
             }
 	],
         'ship_from': sender,
-        'ship_to': receiver	
+        'ship_to': receiver
     },
     'is_document': False
 }
@@ -87,10 +89,10 @@ payload = {
 try:
     api = Postmen(key, region)
     result = api.create('rates', payload)
-    print "RESULT"
+    print("RESULT")
     pp.pprint(result)
 except PostmenException as e:
-    print "ERROR"
-    print e.code()
-    print e.message()
-    print e.details()
+    print("ERROR")
+    print(e.code())
+    print(e.message())
+    print(e.details())
