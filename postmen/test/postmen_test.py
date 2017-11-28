@@ -209,7 +209,7 @@ def testArgument12(monkeypatch):
     with pytest.raises(PostmenException) as e:
         api.get('labels')
     responses.reset()
-    #print(e)
+    # print(e)
     assert "PROBLEM" in str(e.value.message())
     assert not e.value.retryable()
     monkeypatch.setattr(time, 'sleep', lambda s: None)

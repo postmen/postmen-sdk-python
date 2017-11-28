@@ -158,7 +158,7 @@ class Postmen(object):
 
         sec_before_reset = response.headers.get('x-ratelimit-reset', '0')
         sec_before_reset = int(sec_before_reset) / 1000
-        #print(sec_before_reset)
+        # print(sec_before_reset)
         if sec_before_reset:
             if not self._time_before_reset or self._time_before_reset < sec_before_reset:
                 self._time_before_reset = int(sec_before_reset)
