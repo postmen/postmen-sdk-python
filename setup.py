@@ -1,7 +1,6 @@
 from setuptools import setup
 from codecs import open  # To use a consistent encoding
 from os import path
-from pip.req import parse_requirements
 
 here = path.abspath(path.dirname(__file__))
 
@@ -53,9 +52,10 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
 
     # What does your project relate to?
@@ -68,10 +68,9 @@ setup(
         'pytest-runner'
     ],
     install_requires=[
-        'requests==2.7.0',
-        'python-dateutil==2.4.2',
-        'six==1.9.0',
-        'responses==0.5.1'
+        'requests>=2.7.0,<2.12',
+        'python-dateutil>=2.4.2',
+        'six>=1.9.0',
     ],
     tests_require=[
         'pytest'
