@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import pprint
 
 pp = pprint.PrettyPrinter(indent=4)
@@ -15,7 +17,7 @@ region = None
 endpoint = None
 
 if key is None :
-    print 'key is not set, modify file credentials.py'
+    print('key is not set, modify file credentials.py')
 
 if region is None:
-    print 'region is not set, modify file credentials.py'
+    print('region is not set, modify file credentials.py')

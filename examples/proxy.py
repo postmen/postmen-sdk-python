@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from credentials import *
 
 # follow proxy scheme used in requests library
@@ -11,10 +13,10 @@ proxies = {
 try:
     api = Postmen(key, region, proxy = proxies)
     result = api.get('labels')
-    print "RESULT"
+    print("RESULT")
     pp.pprint(result)
 except PostmenException as e:
-    print "ERROR"
-    print e.code()
-    print e.message()
-    print e.details()
+    print("ERROR")
+    print(e.code())
+    print(e.message())
+    print(e.details())
