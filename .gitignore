@@ -1,5 +1,11 @@
 *.pyc
 
+build
+dist
+.cache
+.eggs
+*.egg-info
+
 # =========================== DO NOT touch below v1.0.2 ===============================
 
 .idea
