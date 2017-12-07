@@ -55,7 +55,7 @@ Quick Start
 -----------
 
 In order to get API key and choose a region refer to the
-`documentation <https://docs.postmen.com/overview.html>`__.
+`documentation <https://docs.postmen.com/>`__.
 
 .. code:: python
 
@@ -74,14 +74,14 @@ In order to get API key and choose a region refer to the
 
     try:
         # as an example we request all the labels
-        
+
         result = api.get('labels')
         print("RESULT:")
         pp.pprint(result)
     except PostmenException as e:
         # if error occurs we can access all
         # the details in following way
-        
+
         print("ERROR")
         print(e.code())  # error code
         print(e.message())  # error message
@@ -94,7 +94,7 @@ Postmen(api\_key, region, \*\*kwargs)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Initiate Postmen SDK object. In order to get API key and choose a region
-refer to the `documentation <https://docs.postmen.com/overview.html>`__.
+refer to the `documentation <https://docs.postmen.com/>`__.
 
 +------------------+---------------------+------------+----------+---------------------------------------------------------------------------------+
 | Argument         | Required            | Type       | Default  | Description                                                                     |
@@ -192,11 +192,11 @@ Gets API ``$resource`` objects (list or a single objects).
 
 **API Docs:**
 
-- `GET /rates <https://docs.postmen.com/#rates-list-all-rates>`__ 
-- `GET /rates/:id <https://docs.postmen.com/#rates-retrieve-rates>`__ 
-- `GET /labels <https://docs.postmen.com/#labels-list-all-labels>`__ 
-- `GET /labels/:id <https://docs.postmen.com/#labels-retrieve-a-label>`__ 
-- `GET /manifests <https://docs.postmen.com/#manifests-list-all-manifests>`__ 
+- `GET /rates <https://docs.postmen.com/#rates-list-all-rates>`__
+- `GET /rates/:id <https://docs.postmen.com/#rates-retrieve-rates>`__
+- `GET /labels <https://docs.postmen.com/#labels-list-all-labels>`__
+- `GET /labels/:id <https://docs.postmen.com/#labels-retrieve-a-label>`__
+- `GET /manifests <https://docs.postmen.com/#manifests-list-all-manifests>`__
 - `GET /manifests/:id <https://docs.postmen.com/#manifests-retrieve-a-manifest>`__
 - `GET /cancel-labels <https://docs.postmen.com/#cancel-labels-list-all-cancel-labels>`__
 - `GET /cancel-labels/:id <https://docs.postmen.com/#cancel-labels-retrieve-a-cancel-label>`__
@@ -359,7 +359,7 @@ For each API method SDK provides Python wrapper. Use the table below to
 find SDK method and example that match your need.
 
 +-----------------+-----------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------+
-| Model \\ Action | create                                                                                                                            | get all                                                                                                                  | get by id                                                                                                                    | 
+| Model \\ Action | create                                                                                                                            | get all                                                                                                                  | get by id                                                                                                                    |
 +-----------------+-----------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------+
 | rates           | `.create('rates', payload) <https://github.com/postmen/postmen-sdk-python/blob/master/examples/rates_create.py>`__                | `.get('rates') <https://github.com/postmen/postmen-sdk-python/blob/master/examples/labels_retrieve.py>`__                | `.get('rates', id) <https://github.com/postmen/postmen-sdk-python/blob/master/examples/rates_retrieve.py>`__                 |
 +-----------------+-----------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------+
