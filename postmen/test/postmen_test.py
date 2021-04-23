@@ -21,7 +21,7 @@ global call
 @responses.activate
 def testNotRaiseException() :
     response = '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}'
-    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
+    responses.add(responses.GET, 'https://region-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
     api = Postmen('KEY', 'REGION')
     api.get('labels')
     responses.reset()
@@ -30,7 +30,7 @@ def testNotRaiseException() :
 @responses.activate
 def testNonSerializableJSON():
     response = 'THIS IS NOT A VALID JSON OBJECT'
-    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200, content_type='text/plain')
+    responses.add(responses.GET, 'https://region-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200, content_type='text/plain')
     api = Postmen('KEY', 'REGION')
     with pytest.raises(PostmenException) as e:
         api.get('labels')
@@ -43,7 +43,7 @@ def testNonSerializableJSON():
 @responses.activate
 def testException3():
     response = '{"meta":{"code":999,"message":"PROBLEM","retryable":true,"details":[]},"data":{}}'
-    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
+    responses.add(responses.GET, 'https://region-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
     api = Postmen('KEY', 'REGION')
     with pytest.raises(PostmenException) as e:
         api.get('labels')
@@ -56,7 +56,7 @@ def testException3():
 @responses.activate
 def testException4():
     response = '{"meta":{"code":999,"message":"PROBLEM","retryable":false,"details":[]},"data":{}}'
-    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
+    responses.add(responses.GET, 'https://region-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
     api = Postmen('KEY', 'REGION')
     with pytest.raises(PostmenException) as e:
         api.get('labels')
@@ -69,7 +69,7 @@ def testException4():
 @responses.activate
 def testException5():
     response = '{"meta":{"code":999,"message":"PROBLEM","retryable":false,"details":[{"key":"value"}]},"data":{}}'
-    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
+    responses.add(responses.GET, 'https://region-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
     api = Postmen('KEY', 'REGION')
     with pytest.raises(PostmenException) as e:
         api.get('labels')
@@ -84,7 +84,7 @@ def testException5():
 @responses.activate
 def testException6():
     response = '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}'
-    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
+    responses.add(responses.GET, 'https://region-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
     api = CrashPostmen('KEY', 'REGION')
     with pytest.raises(PostmenException) as e:
         api.get('labels')
@@ -96,7 +96,7 @@ def testException6():
 @responses.activate
 def testArguments7():
     response = '{"meta":{"code":999,"message":"NOT OK","details":[]},"data":{}}'
-    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200, content_type='text/plain')
+    responses.add(responses.GET, 'https://region-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200, content_type='text/plain')
     api = Postmen('KEY', 'REGION')
     api.get('labels', safe=True)
     responses.reset()
@@ -120,7 +120,7 @@ def testRetryDelay():
         elif call == 2 :
             call = 3
             return (200, headers,  '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}')
-    responses.add_callback(responses.GET, 'https://REGION-api.postmen.com/v3/labels', callback=request_callback)
+    responses.add_callback(responses.GET, 'https://region-api.postmen.com/v3/labels', callback=request_callback)
     api = Postmen('KEY', 'REGION')
     api.get('labels')
     responses.reset()
@@ -138,7 +138,7 @@ def testRetryMaxAttempt(monkeypatch):
             return (200, headers,  '{"meta":{"code":999,"message":"PROBLEM","retryable":true, "details":[]},"data":{}}')
         else :
             return (200, headers,  '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}')
-    responses.add_callback(responses.GET, 'https://REGION-api.postmen.com/v3/labels', callback=request_callback)
+    responses.add_callback(responses.GET, 'https://region-api.postmen.com/v3/labels', callback=request_callback)
     api = Postmen('KEY', 'REGION')
     before = time.time()
     api.get('labels')
@@ -159,7 +159,7 @@ def testRetryMaxAttemptExceeded(monkeypatch):
             return (200, headers,  '{"meta":{"code":999,"message":"PROBLEM","retryable":true, "details":[]},"data":{}}')
         else :
             pytest.fail("Maximum 5 attempts of retry, test #10 failed")
-    responses.add_callback(responses.GET, 'https://REGION-api.postmen.com/v3/labels', callback=request_callback)
+    responses.add_callback(responses.GET, 'https://region-api.postmen.com/v3/labels', callback=request_callback)
     api = Postmen('KEY', 'REGION')
     with pytest.raises(PostmenException) as e:
         api.get('labels')
@@ -181,7 +181,7 @@ def testArguments11(monkeypatch):
             return (200, headers,  '{"meta":{"code":999,"message":"PROBLEM","retryable":true, "details":[]},"data":{}}')
         else :
             pytest.fail("Shall not retry if retry = False, test #11 failed")
-    responses.add_callback(responses.GET, 'https://REGION-api.postmen.com/v3/labels', callback=request_callback)
+    responses.add_callback(responses.GET, 'https://region-api.postmen.com/v3/labels', callback=request_callback)
     api = Postmen('KEY', 'REGION', retry=False)
     with pytest.raises(PostmenException) as e:
         api.get('labels')
@@ -204,7 +204,7 @@ def testArgument12(monkeypatch):
             return (200, headers,  '{"meta":{"code":999,"message":"PROBLEM","retryable":false, "details":[]},"data":{}}')
         elif call == 1 :
             pytest.fail("Shall not retry if non retryable, test #12 failed")
-    responses.add_callback(responses.GET, 'https://REGION-api.postmen.com/v3/labels', callback=request_callback)
+    responses.add_callback(responses.GET, 'https://region-api.postmen.com/v3/labels', callback=request_callback)
     api = Postmen('KEY', 'REGION')
     with pytest.raises(PostmenException) as e:
         api.get('labels')
@@ -227,7 +227,7 @@ def testRateLimit(monkeypatch):
             return (200, exceeded,  '{"meta":{"code":429,"message":"EXCEEDED","retryable":true, "details":[]},"data":{}}')
         elif call == 1 :
             return (200, headers,  '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}')
-    responses.add_callback(responses.GET, 'https://REGION-api.postmen.com/v3/labels', callback=request_callback)
+    responses.add_callback(responses.GET, 'https://region-api.postmen.com/v3/labels', callback=request_callback)
     api = Postmen('KEY', 'REGION')
     api.get('labels')
     responses.reset()
@@ -237,7 +237,7 @@ def testRateLimit(monkeypatch):
 @responses.activate
 def testArgument14():
     response = '{"meta":{"code":429,"message":"EXCEEDED","retryable":true, "details":[]},"data":{}}'
-    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=exceeded, body=response, status=200)
+    responses.add(responses.GET, 'https://region-api.postmen.com/v3/labels', adding_headers=exceeded, body=response, status=200)
     api = Postmen('KEY', 'REGION', rate=False)
     with pytest.raises(PostmenException) as e:
         api.get('labels')
@@ -250,7 +250,7 @@ def testArgument14():
 @responses.activate
 def testIncorrectResponseHeaders():
     response = '{"meta":{"code":200,"message":"OK","details":[]},"data":{"key":"value"}}'
-    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=incorrect, body=response, status=200)
+    responses.add(responses.GET, 'https://region-api.postmen.com/v3/labels', adding_headers=incorrect, body=response, status=200)
     api = Postmen('KEY', 'REGION')
     ret = api.get('labels')
     assert ret['key'] == 'value'
@@ -271,7 +271,7 @@ def testArgument16():
 @responses.activate
 def testArgument17() :
     response = '{"meta":{"code":200,"message":"OK","details":[]},"data":{}}'
-    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
+    responses.add(responses.GET, 'https://region-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
     api = Postmen('KEY', 'REGION', raw=True)
     ret = api.get('labels')
     assert ret == response
@@ -281,7 +281,7 @@ def testArgument17() :
 @responses.activate
 def testArgument18() :
     response = '{"meta":{"code":999,"message":"NOT OK","details":[]},"data":{}}'
-    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
+    responses.add(responses.GET, 'https://region-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200)
     api = Postmen('KEY', 'REGION', raw=True)
     ret = api.get('labels')
     assert ret == response
@@ -403,7 +403,7 @@ def testQuery():
 @responses.activate
 def testTime():
     response = '{"meta":{"code":200,"message":"OK","details":[]},"data":{"when": "2016-01-31T16:45:46+00:00"}}'
-    responses.add(responses.GET, 'https://REGION-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200, content_type='text/plain')
+    responses.add(responses.GET, 'https://region-api.postmen.com/v3/labels', adding_headers=headers, body=response, status=200, content_type='text/plain')
     api = Postmen('KEY', 'REGION')
     res = api.get('labels')
     assert res['when'] == '2016-01-31T16:45:46+00:00'
